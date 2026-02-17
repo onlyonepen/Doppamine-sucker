@@ -322,6 +322,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 404075799}
+  - component: {fileID: 404075802}
   - component: {fileID: 404075800}
   - component: {fileID: 404075801}
   m_Layer: 0
@@ -373,16 +374,19 @@ MonoBehaviour:
   maxLookAngle: 70
   lockCursor: 1
   playerCanMove: 1
-  walkSpeed: 8
+  walkSpeed: 10
+  acceleration: 60
+  deceleration: 40
   maxVelocityChange: 7
   enableJump: 1
   hasVariableJumpHeight: 1
   jumpKey: 32
-  jumpPower: 7
+  jumpPower: 10
   coyoteTime: 0.15
   jumpBuffferingTime: 0.2
-  hasExtraGrav: 1
-  extraGravityAmount: 5
+  RealisticGravity: 25
+  hasFallingExtraGrav: 1
+  extraGravityAmount: 7
   hasApexModifier: 1
   apexVertVelocityDetection: 0.7
   apexSpeedMult: 1.2
@@ -428,6 +432,25 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 112
   m_CollisionDetection: 2
+--- !u!114 &404075802
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 404075795}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cae059de92580c84a809da0f8c114c95, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PBM: {fileID: 0}
+  Cam: {fileID: 0}
+  GrappleMaxDistance: 0
+  GrappleTravelTime: 0
+  Grappable:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -1414,7 +1437,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2102409992}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Terrain
   m_TagString: Untagged
   m_Icon: {fileID: 0}

@@ -32,6 +32,8 @@ public class PlayerBaseMovement : MonoBehaviour
 
     public bool playerCanMove = true;
     public float walkSpeed = 5f;
+    public float acceleration = 50f; // Higher = Snappier
+    public float deceleration = 40f; // Higher = Stops faster
     public float maxVelocityChange = 10f;
 
     // Internal Variables
@@ -58,9 +60,10 @@ public class PlayerBaseMovement : MonoBehaviour
     #endregion
 
     #region Extra gravity
-    [Header("Extra gravity")]
+    [Header("Gravity")]
 
-    public bool hasExtraGrav = true;
+    public float RealisticGravity = 30f;
+    public bool hasFallingExtraGrav = true;
     public float extraGravityAmount = 3;
 
     #endregion
@@ -98,7 +101,7 @@ public class PlayerBaseMovement : MonoBehaviour
     #endregion
     #endregion
 
-    #region floating capsule
+    #region Floating Capsule
 
     [Header("Floating Capsule")]
 
@@ -235,20 +238,45 @@ public class PlayerBaseMovement : MonoBehaviour
 
     void FixedUpdate()
     {
+        rb.AddForce(Vector3.down * (RealisticGravity - 9.8f),ForceMode.Acceleration);
+
         #region Movement
 
         if (playerCanMove)
         {
-            Vector3 targetVelocity = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-            isWalking = (targetVelocity.magnitude > 0 && isGrounded);
+            //Vector3 targetVelocity = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+            //isWalking = (targetVelocity.magnitude > 0 && isGrounded);
 
-            targetVelocity = transform.TransformDirection(targetVelocity).normalized * walkSpeed;
+            //targetVelocity = transform.TransformDirection(targetVelocity).normalized * walkSpeed;
 
-            Vector3 velocity = rb.linearVelocity;
-            Vector3 velocityChange = (targetVelocity - velocity);
-            velocityChange.x = Mathf.Clamp(velocityChange.x, -maxVelocityChange, maxVelocityChange);
-            velocityChange.z = Mathf.Clamp(velocityChange.z, -maxVelocityChange, maxVelocityChange);
-            velocityChange.y = 0;
+            //Vector3 velocity = rb.linearVelocity;
+            //Vector3 velocityChange = (targetVelocity - velocity);
+            //velocityChange.x = Mathf.Clamp(velocityChange.x, -maxVelocityChange, maxVelocityChange);
+            //velocityChange.z = Mathf.Clamp(velocityChange.z, -maxVelocityChange, maxVelocityChange);
+            //velocityChange.y = 0;
+
+            //rb.AddForce(velocityChange, ForceMode.VelocityChange);
+
+            // 1. Get raw input for responsiveness
+            Vector3 input = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
+            if (input.magnitude > 1) input.Normalize();
+
+            // 2. Define where we WANT to be
+            Vector3 targetVelocity = transform.TransformDirection(input) * walkSpeed;
+
+            // 3. Get where we ARE
+            Vector3 currentVelocity = rb.linearVelocity;
+            currentVelocity.y = 0; // Ignore gravity for the calculation
+
+            // 4. Determine if we are accelerating or braking
+            // If input is zero, we use deceleration; otherwise, we use acceleration.
+            float driveForce = input.magnitude > 0 ? acceleration : deceleration;
+
+            // 5. Gradually move current velocity toward target velocity
+            Vector3 newVelocity = Vector3.MoveTowards(currentVelocity, targetVelocity, driveForce * Time.fixedDeltaTime);
+
+            // 6. Calculate the "Push" needed to reach that new velocity
+            Vector3 velocityChange = (newVelocity - currentVelocity);
 
             rb.AddForce(velocityChange, ForceMode.VelocityChange);
         }
@@ -268,7 +296,7 @@ public class PlayerBaseMovement : MonoBehaviour
         #region ExtraGrav
 
         bool variableJumpHeightActive = hasVariableJumpHeight && !Input.GetKey(jumpKey);
-        isExtraGravOn = hasExtraGrav && (rb.linearVelocity.y < 0 || variableJumpHeightActive);
+        isExtraGravOn = hasFallingExtraGrav && (rb.linearVelocity.y < 0 || variableJumpHeightActive);
         if (isExtraGravOn)
         {
             rb.AddForce(Vector3.down * extraGravityAmount, ForceMode.Acceleration);
@@ -290,6 +318,9 @@ public class PlayerBaseMovement : MonoBehaviour
 
     private void CheckGround()
     {
+        //Vector3 castPos = transform.position - (Vector3.up * (rideHeight + 0.1f));
+        //RaycastHit hit;
+        //isGrounded = !Physics.SphereCast(castPos, 0.1f, Vector3.down, out hit, Mathf.Infinity, GroundLayer);
         isGrounded = Physics.Raycast(transform.position, Vector3.down, rideHeight + 0.1f, GroundLayer);
     }
 
@@ -298,7 +329,7 @@ public class PlayerBaseMovement : MonoBehaviour
         if (jumpMuteTimer > 0) return;
 
         Ray ray = new Ray(transform.position, Vector3.down);
-        if (Physics.Raycast(ray, out RaycastHit hit, rideHeight + 1f, GroundLayer))
+        if (Physics.Raycast(ray, out RaycastHit hit, rideHeight + 0.1f, GroundLayer))
         {
             float distance = hit.distance;
 
@@ -307,6 +338,7 @@ public class PlayerBaseMovement : MonoBehaviour
             float xLen = distance - rideHeight;
             float springForce = (xLen * rideSpringStrength) - (relVel * rideSpringDamper);
 
+            Debug.DrawLine(transform.position, transform.position + (Vector3.down * (rideHeight + 0.1f)), Color.red);
             rb.AddForce(Vector3.down * springForce);
         }
     }
