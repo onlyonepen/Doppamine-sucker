@@ -3,6 +3,7 @@ using UnityEngine;
 public class ThrowGrappleState : PlayerState
 {
     private float stateEnterTime;
+    RaycastHit grappleCastHit;
 
     public override void OnStateEnter(PlayerStateManager gamestateManager)
     {
@@ -11,6 +12,8 @@ public class ThrowGrappleState : PlayerState
         manager.PBM.enabled = true;
 
         stateEnterTime = Time.time;
+
+        grappleCastHit = grappleRaycast();
     }
 
     public override void OnStateUpdate()
@@ -19,13 +22,16 @@ public class ThrowGrappleState : PlayerState
 
         if(Time.time - stateEnterTime > manager.GrappleTravelTime)
         {
-            RaycastHit grappleCastHit = grappleRaycast();
+            if(grappleCastHit.collider == null)
+            {
+                manager.ChangeState(manager.BaseState);
+                return;
+            }
             manager.RUD.GrapplePoint = grappleCastHit.point;
             manager.RUD.GrappledObject = grappleCastHit.collider.gameObject;
 
-            //if cast hit enemy -> pull
-
-            //if cast hit ground -> swing
+            if ((1 << manager.RUD.GrappledObject.layer & manager.Swingable) != 0) { manager.ChangeState(manager.SwingState); }
+            else if ((1 << manager.RUD.GrappledObject.layer & manager.Pullable) != 0) { }
         }
     }
 
@@ -33,11 +39,8 @@ public class ThrowGrappleState : PlayerState
 
     private RaycastHit grappleRaycast()
     {
-        Vector3 screenCenterPoint = new Vector3(Screen.width / 2, Screen.height / 2, 0);
-        Ray grappleRay = manager.Cam.ScreenPointToRay(screenCenterPoint);
-
         RaycastHit grappleHit;
-        Physics.Raycast(grappleRay, out grappleHit, manager.GrappleMaxDistance, manager.Grappable);
+        Physics.Raycast(manager.Cam.transform.position, manager.Cam.transform.forward, out grappleHit, manager.GrappleMaxDistance, manager.Swingable | manager.Pullable);
 
         return grappleHit;
     }

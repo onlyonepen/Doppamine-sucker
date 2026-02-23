@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class PlayerBaseMovement : MonoBehaviour
 {
-    private Rigidbody rb;
+    [HideInInspector] public Rigidbody rb;
 
     #region seralize
     [Header("seralize")]
@@ -175,6 +175,7 @@ public class PlayerBaseMovement : MonoBehaviour
 
         #endregion
 
+
         #region Jump
 
         if (isGrounded)
@@ -230,6 +231,7 @@ public class PlayerBaseMovement : MonoBehaviour
 
         #endregion
 
+
         if (enableHeadBob)
         {
             HeadBob();
@@ -244,41 +246,23 @@ public class PlayerBaseMovement : MonoBehaviour
 
         if (playerCanMove)
         {
-            //Vector3 targetVelocity = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-            //isWalking = (targetVelocity.magnitude > 0 && isGrounded);
-
-            //targetVelocity = transform.TransformDirection(targetVelocity).normalized * walkSpeed;
-
-            //Vector3 velocity = rb.linearVelocity;
-            //Vector3 velocityChange = (targetVelocity - velocity);
-            //velocityChange.x = Mathf.Clamp(velocityChange.x, -maxVelocityChange, maxVelocityChange);
-            //velocityChange.z = Mathf.Clamp(velocityChange.z, -maxVelocityChange, maxVelocityChange);
-            //velocityChange.y = 0;
-
-            //rb.AddForce(velocityChange, ForceMode.VelocityChange);
-
-            // 1. Get raw input for responsiveness
+            #region horizontalMove
             Vector3 input = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
             if (input.magnitude > 1) input.Normalize();
 
-            // 2. Define where we WANT to be
             Vector3 targetVelocity = transform.TransformDirection(input) * walkSpeed;
 
-            // 3. Get where we ARE
             Vector3 currentVelocity = rb.linearVelocity;
-            currentVelocity.y = 0; // Ignore gravity for the calculation
+            currentVelocity.y = 0;
 
-            // 4. Determine if we are accelerating or braking
-            // If input is zero, we use deceleration; otherwise, we use acceleration.
             float driveForce = input.magnitude > 0 ? acceleration : deceleration;
 
-            // 5. Gradually move current velocity toward target velocity
             Vector3 newVelocity = Vector3.MoveTowards(currentVelocity, targetVelocity, driveForce * Time.fixedDeltaTime);
-
-            // 6. Calculate the "Push" needed to reach that new velocity
             Vector3 velocityChange = (newVelocity - currentVelocity);
 
             rb.AddForce(velocityChange, ForceMode.VelocityChange);
+
+            #endregion
         }
 
         #endregion
@@ -318,9 +302,6 @@ public class PlayerBaseMovement : MonoBehaviour
 
     private void CheckGround()
     {
-        //Vector3 castPos = transform.position - (Vector3.up * (rideHeight + 0.1f));
-        //RaycastHit hit;
-        //isGrounded = !Physics.SphereCast(castPos, 0.1f, Vector3.down, out hit, Mathf.Infinity, GroundLayer);
         isGrounded = Physics.Raycast(transform.position, Vector3.down, rideHeight + 0.1f, GroundLayer);
     }
 
@@ -345,7 +326,7 @@ public class PlayerBaseMovement : MonoBehaviour
 
     private void Jump()
     {
-        rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.y);
+        rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
         rb.AddForce(0f, jumpPower, 0f, ForceMode.Impulse);
         isGrounded = false;
 
@@ -385,12 +366,10 @@ public class PlayerBaseMovement : MonoBehaviour
             {
                 timer += Time.deltaTime * (bobSpeed * speedReduction);
             }
-            // Calculates HeadBob speed during walking
             else
             {
                 timer += Time.deltaTime * bobSpeed;
             }
-            // Applies HeadBob movement
             joint.localPosition = new Vector3(jointOriginalPos.x + Mathf.Sin(timer) * bobAmount.x, jointOriginalPos.y + Mathf.Sin(timer) * bobAmount.y, jointOriginalPos.z + Mathf.Sin(timer) * bobAmount.z);
         }
         else
