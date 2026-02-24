@@ -13,7 +13,7 @@ public class ThrowGrappleState : PlayerState
 
         stateEnterTime = Time.time;
 
-        grappleCastHit = grappleRaycast();
+        grappleCastHit = manager.GrapplePrediction();
     }
 
     public override void OnStateUpdate()
@@ -22,26 +22,25 @@ public class ThrowGrappleState : PlayerState
 
         if(Time.time - stateEnterTime > manager.GrappleTravelTime)
         {
-            if(grappleCastHit.collider == null)
+            if (!Input.GetMouseButton(1) || grappleCastHit.collider == null)
             {
                 manager.ChangeState(manager.BaseState);
                 return;
             }
+
             manager.RUD.GrapplePoint = grappleCastHit.point;
             manager.RUD.GrappledObject = grappleCastHit.collider.gameObject;
 
             if ((1 << manager.RUD.GrappledObject.layer & manager.Swingable) != 0) { manager.ChangeState(manager.SwingState); }
-            else if ((1 << manager.RUD.GrappledObject.layer & manager.Pullable) != 0) { }
+            else if ((1 << manager.RUD.GrappledObject.layer & manager.Pullable) != 0) { manager.ChangeState(manager.ReelState); }
+            else manager.ChangeState(manager.BaseState);
         }
     }
 
-
-
-    private RaycastHit grappleRaycast()
+    public override void OnStateExit()
     {
-        RaycastHit grappleHit;
-        Physics.Raycast(manager.Cam.transform.position, manager.Cam.transform.forward, out grappleHit, manager.GrappleMaxDistance, manager.Swingable | manager.Pullable);
+        base.OnStateExit();
 
-        return grappleHit;
+        manager.predictionPoint.gameObject.SetActive(false);
     }
 }

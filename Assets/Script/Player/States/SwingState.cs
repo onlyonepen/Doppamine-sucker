@@ -1,12 +1,9 @@
 using UnityEngine;
-using VHierarchy.Libs;
 
 public class SwingState : PlayerState
 {
     private Vector3 GrapplePoint;
     private SpringJoint joint;
-    private Vector3 TotalDir;
-
     private float currentDist;
 
     private float vertInput;
@@ -30,7 +27,7 @@ public class SwingState : PlayerState
     {
         base.OnStateExit();
         manager.GrappleLr.enabled = false;
-        joint.Destroy();
+        MonoBehaviour.Destroy(joint);
     }
 
     public override void OnStateUpdate()
@@ -43,22 +40,23 @@ public class SwingState : PlayerState
         vertInput = new Vector2(horiInput, vertInput).normalized.y;
         horiInput = new Vector2(horiInput, vertInput).normalized.x;
 
-        currentDist = Vector3.Distance(GrapplePoint, manager.transform.position);
-        TotalDir = manager.Cam.transform.forward * vertInput + manager.Cam.transform.right * horiInput;
-
         drawRope();
         AirControl();
         SwingDash();
+
+        if (Vector3.Distance(GrapplePoint, manager.transform.position) < currentDist)
+        {
+            RecalibateJointMaxDistance();
+        }
+        currentDist = Vector3.Distance(GrapplePoint, manager.transform.position);
     }
 
     public override void OnStatePhysicsUpdate()
     {
         base.OnStatePhysicsUpdate();
 
-        //manager.rb.AddForce(Vector3.up * 5, ForceMode.Acceleration); // lower gravity for better air control
+        manager.rb.AddForce(Vector3.up * 5, ForceMode.Acceleration); // lower gravity for better air control
 
-
-        RecalibateJointMaxDistance();
     }
 
     private void InnitiateSpring()
@@ -104,8 +102,8 @@ public class SwingState : PlayerState
 
             newForce = Mathf.Clamp(newForce, manager.SwingDashMinPower, manager.SwingDashMaxPower);
             manager.rb.AddForce(manager.Cam.transform.forward.normalized * newForce, ForceMode.VelocityChange);
-            Debug.Log("add for " + newForce);
-            joint.maxDistance *= 1.2f;
+            Debug.Log("Dash for " + newForce);
+            //joint.maxDistance *= 1.2f;
             SwingDashed = true;
         }
     }

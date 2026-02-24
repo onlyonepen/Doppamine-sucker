@@ -31,10 +31,10 @@ public class PlayerBaseMovement : MonoBehaviour
     [Header("Movement")]
 
     public bool playerCanMove = true;
-    public float walkSpeed = 5f;
-    public float acceleration = 50f; // Higher = Snappier
-    public float deceleration = 40f; // Higher = Stops faster
-    public float maxVelocityChange = 10f;
+    [SerializeField] private float walkSpeed = 8f;
+    [SerializeField] private float acceleration = 50f; 
+    [SerializeField] private float deceleration = 40f;
+    [SerializeField] private float AirMaxSpeed = 20f;  
 
     // Internal Variables
     private bool isWalking = false;
@@ -175,51 +175,54 @@ public class PlayerBaseMovement : MonoBehaviour
 
         #endregion
 
-
-        #region Jump
-
-        if (isGrounded)
+        if (playerCanMove)
         {
-            coyoteTimer = coyoteTime;
-            isExtraGravOn = false;
-        }
+            #region Jump
 
-        if (Input.GetKeyDown(jumpKey))
-        {
-            bufferingTimer = jumpBuffferingTime;
-        }
-
-        if (enableJump && bufferingTimer > 0f && coyoteTimer > 0f)
-        {
-            Jump();
-            bufferingTimer = 0f;
-            coyoteTimer = 0f;
-        }
-
-        #endregion
-
-        #region Crouch
-
-        if (enableCrouch)
-        {
-            if (Input.GetKeyDown(crouchKey) && !holdToCrouch)
+            if (isGrounded)
             {
-                Crouch();
+                coyoteTimer = coyoteTime;
+                isExtraGravOn = false;
             }
 
-            if (Input.GetKeyDown(crouchKey) && holdToCrouch)
+            if (Input.GetKeyDown(jumpKey))
             {
-                isCrouched = false;
-                Crouch();
+                bufferingTimer = jumpBuffferingTime;
             }
-            else if (Input.GetKeyUp(crouchKey) && holdToCrouch)
-            {
-                isCrouched = true;
-                Crouch();
-            }
-        }
 
-        #endregion
+            if (enableJump && bufferingTimer > 0f && coyoteTimer > 0f)
+            {
+                Jump();
+                bufferingTimer = 0f;
+                coyoteTimer = 0f;
+            }
+
+            #endregion
+
+            #region Crouch
+
+            if (enableCrouch)
+            {
+                if (Input.GetKeyDown(crouchKey) && !holdToCrouch)
+                {
+                    Crouch();
+                }
+
+                if (Input.GetKeyDown(crouchKey) && holdToCrouch)
+                {
+                    isCrouched = false;
+                    Crouch();
+                }
+                else if (Input.GetKeyUp(crouchKey) && holdToCrouch)
+                {
+                    isCrouched = true;
+                    Crouch();
+                }
+            }
+
+            #endregion
+
+        }
 
         #region 0 Velocity snap
         Vector3 inputVelocity = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
@@ -246,23 +249,31 @@ public class PlayerBaseMovement : MonoBehaviour
 
         if (playerCanMove)
         {
-            #region horizontalMove
             Vector3 input = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
-            if (input.magnitude > 1) input.Normalize();
+            if (isGrounded)
+            {
+                if (input.magnitude > 1) input.Normalize();
 
-            Vector3 targetVelocity = transform.TransformDirection(input) * walkSpeed;
+                Vector3 targetVelocity = transform.TransformDirection(input) * walkSpeed;
 
-            Vector3 currentVelocity = rb.linearVelocity;
-            currentVelocity.y = 0;
+                Vector3 currentVelocity = rb.linearVelocity;
+                currentVelocity.y = 0;
 
-            float driveForce = input.magnitude > 0 ? acceleration : deceleration;
+                float driveForce = input.magnitude > 0 ? acceleration : deceleration;
 
-            Vector3 newVelocity = Vector3.MoveTowards(currentVelocity, targetVelocity, driveForce * Time.fixedDeltaTime);
-            Vector3 velocityChange = (newVelocity - currentVelocity);
+                Vector3 newVelocity = Vector3.MoveTowards(currentVelocity, targetVelocity, driveForce * Time.fixedDeltaTime);
 
-            rb.AddForce(velocityChange, ForceMode.VelocityChange);
+                Vector3 velocityChange = (newVelocity - currentVelocity);
 
-            #endregion
+                rb.AddForce(velocityChange, ForceMode.VelocityChange);
+            }
+            else
+            {
+                if(rb.linearVelocity.magnitude > AirMaxSpeed)
+                {
+                    rb.linearVelocity = rb.linearVelocity.normalized * AirMaxSpeed;
+                }
+            }
         }
 
         #endregion
