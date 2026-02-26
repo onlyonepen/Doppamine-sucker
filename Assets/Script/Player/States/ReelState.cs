@@ -44,4 +44,6 @@ public class ReelState : PlayerState
         yield return new WaitForSeconds(1.5f);
         manager.ChangeState(manager.BaseState);
     }
+
+
 }

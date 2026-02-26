@@ -13,6 +13,10 @@ public class PlayerStateManager : MonoBehaviour
     public Transform predictionPoint;
     public float GrappleMaxDistance;
     public float GrappleTravelTime;
+    public LayerMask Swingable;
+    public LayerMask Pullable;
+    public LineRenderer GrappleLr;
+    [Header("Swinging")]
     public float JointSpring = 4.5f;
     public float JointDamper = 7f;
     public float JointMassScale = 4.5f;
@@ -21,9 +25,8 @@ public class PlayerStateManager : MonoBehaviour
     public float SwingDashPower = 20;
     public float SwingDashMaxPower = 18;
     public float SwingDashMinPower = 5;
-    public LayerMask Swingable;
-    public LayerMask Pullable;
-    public LineRenderer GrappleLr;
+    [Header("Pull into")]
+    public float OvershootYAxis = 3f;
 
     #region states
 
@@ -33,6 +36,7 @@ public class PlayerStateManager : MonoBehaviour
     public PlayerState ThrowGrappleState = new ThrowGrappleState();
     public PlayerState SwingState = new SwingState();
     public PlayerState ReelState = new ReelState();
+    public PlayerState HookIntoState = new HookIntoState();
 
     #endregion
 

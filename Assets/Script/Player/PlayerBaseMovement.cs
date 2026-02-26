@@ -105,6 +105,8 @@ public class PlayerBaseMovement : MonoBehaviour
 
     [Header("Floating Capsule")]
 
+    [HideInInspector] public bool FloatingCapsuleActive = true;
+
     [SerializeField] private float rideHeight = 1.5f; // Desired height above ground
     [SerializeField] private float rideSpringStrength = 50f; // How "stiff" the hover is
     [SerializeField] private float rideSpringDamper = 5f;
@@ -139,6 +141,8 @@ public class PlayerBaseMovement : MonoBehaviour
         {
             Cursor.lockState = CursorLockMode.Locked;
         }
+
+        Physics.gravity = Vector3.down * RealisticGravity;
     }
 
     private void Update()
@@ -243,7 +247,7 @@ public class PlayerBaseMovement : MonoBehaviour
 
     void FixedUpdate()
     {
-        rb.AddForce(Vector3.down * (RealisticGravity - 9.8f),ForceMode.Acceleration);
+        //rb.AddForce(Vector3.down * (RealisticGravity - 9.8f),ForceMode.Acceleration);
 
         #region Movement
 
@@ -308,7 +312,10 @@ public class PlayerBaseMovement : MonoBehaviour
 
         #endregion
 
-        floatingCapsule();
+        if (FloatingCapsuleActive)
+        {
+            floatingCapsule();
+        }
     }
 
     private void CheckGround()

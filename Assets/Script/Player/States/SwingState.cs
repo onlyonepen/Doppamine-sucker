@@ -34,6 +34,7 @@ public class SwingState : PlayerState
     {
         base.OnStateUpdate();
         if (Input.GetMouseButtonUp(1)) manager.ChangeState(manager.BaseState);
+        if (Input.GetKeyDown(KeyCode.LeftShift)) manager.ChangeState(manager.HookIntoState);
 
         vertInput = Input.GetAxis("Vertical");
         horiInput = Input.GetAxis("Horizontal");

@@ -927,7 +927,7 @@ Transform:
   m_GameObject: {fileID: 404075795}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.33, z: 0}
+  m_LocalPosition: {x: 0, y: 1.04, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -975,7 +975,7 @@ MonoBehaviour:
   RealisticGravity: 18
   hasFallingExtraGrav: 1
   extraGravityAmount: 7
-  hasApexModifier: 1
+  hasApexModifier: 0
   apexVertVelocityDetection: 0.7
   apexSpeedMult: 1.2
   apexFloatPower: 1
@@ -986,6 +986,7 @@ MonoBehaviour:
   crouchKey: 306
   crouchHeight: 0.75
   speedReduction: 0.5
+  ActiveFloatingCapsule: 0
   rideHeight: 1
   rideSpringStrength: 200
   rideSpringDamper: 20
@@ -1040,6 +1041,13 @@ MonoBehaviour:
   predictionPoint: {fileID: 2076614694}
   GrappleMaxDistance: 50
   GrappleTravelTime: 0.25
+  Swingable:
+    serializedVersion: 2
+    m_Bits: 64
+  Pullable:
+    serializedVersion: 2
+    m_Bits: 384
+  GrappleLr: {fileID: 1904927222}
   JointSpring: 4.5
   JointDamper: 3
   JointMassScale: 4.5
@@ -1048,13 +1056,7 @@ MonoBehaviour:
   SwingDashPower: 6
   SwingDashMaxPower: 17
   SwingDashMinPower: 5
-  Swingable:
-    serializedVersion: 2
-    m_Bits: 64
-  Pullable:
-    serializedVersion: 2
-    m_Bits: 384
-  GrappleLr: {fileID: 1904927222}
+  OvershootYAxis: 2
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
