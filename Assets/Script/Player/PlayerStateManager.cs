@@ -26,6 +26,7 @@ public class PlayerStateManager : MonoBehaviour
     public float SwingDashMaxPower = 18;
     public float SwingDashMinPower = 5;
     [Header("Pull into")]
+    public float Speed = 1f;
     public float OvershootYAxis = 3f;
 
     #region states
@@ -61,6 +62,11 @@ public class PlayerStateManager : MonoBehaviour
         CurrentState.OnStateExit();
         CurrentState = state;
         CurrentState.OnStateEnter(this);
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        CurrentState.OnStateTriggerEnter(other);
     }
 
     public RaycastHit GrapplePrediction()
@@ -106,25 +112,6 @@ public class PlayerStateManager : MonoBehaviour
         }
 
         return finalHit;
-        //Vector3 finalPoint;
-        //if (raycastHit.point != Vector3.zero) finalPoint = raycastHit.point;
-        //else if (sphereCastHit.point != Vector3.zero) finalPoint = sphereCastHit.point;
-        //else finalPoint = Vector3.zero;
-
-        //if ((1 << sphereCastHit.collider.gameObject.layer & Pullable) != 0)
-        //{
-        //    finalPoint = sphereCastHit.point;
-        //    predictionPoint.gameObject.SetActive(true);
-        //    predictionPoint.position = finalPoint;
-        //}
-        //else if(finalPoint != Vector3.zero)
-        //{
-        //    predictionPoint.gameObject.SetActive(true);
-        //    predictionPoint.position = finalPoint;
-        //}
-        //else predictionPoint.gameObject.SetActive(false);
-
-        //return raycastHit.point == Vector3.zero ? sphereCastHit : raycastHit;
     }
 }
 
@@ -140,6 +127,7 @@ public abstract class PlayerState
     public virtual void OnStateUpdate() { }
     public virtual void OnStatePhysicsUpdate() { }
     public virtual void OnStateExit() { }
+    public virtual void OnStateTriggerEnter(Collider collider) { }
 }
 
 public class PlayerRUD

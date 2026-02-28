@@ -1,8 +1,11 @@
+using DG.Tweening;
 using UnityEngine;
 
 public class HookIntoState : PlayerState
 {
     float enterTimeStamp;
+
+    bool isExtraGravOn = false;
     public override void OnStateEnter(PlayerStateManager gamestateManager)
     {
         base.OnStateEnter(gamestateManager);
@@ -11,10 +14,21 @@ public class HookIntoState : PlayerState
 
         manager.PBM.playerCanMove = false;
         manager.PBM.FloatingCapsuleActive = false;
+        if (manager.PBM.hasFallingExtraGrav)
+        {
+            isExtraGravOn = true;
+            manager.PBM.hasFallingExtraGrav = false;
+        }
 
         manager.GrappleLr.SetPosition(1, manager.RUD.GrapplePoint);
 
         manager.rb.linearVelocity = Vector3.zero;
+
+        //float dist = Vector3.Distance(manager.transform.position, manager.RUD.GrapplePoint);
+        //float pullDur = manager.Speed * dist / manager.GrappleMaxDistance * 2;
+        //if (pullDur < 0.5) pullDur = 0.5f;
+        //float overShootY = manager.OvershootYAxis * dist / manager.GrappleMaxDistance * 2;
+        //seq = manager.transform.DOJump(manager.RUD.GrapplePoint, manager.OvershootYAxis, 1, pullDur);
 
         JumpToGrapplePos();
     }
@@ -23,21 +37,31 @@ public class HookIntoState : PlayerState
     {
         base.OnStateUpdate();
 
-        manager.GrappleLr.SetPosition(0, manager.Guntip.position);
-
         AirControl();
 
-        if(Time.time - enterTimeStamp > 0.2f)
+        if(Time.time - enterTimeStamp > 0.5f)
         {
-            manager.ChangeState(manager.BaseState);
+            manager.GrapplePrediction();
+            if (Input.GetMouseButtonDown(1)) manager.ChangeState(manager.ThrowGrappleState);
         }
+
+        manager.GrappleLr.SetPosition(0, manager.Guntip.position);
     }
 
     public override void OnStateExit()
     {
         base.OnStateExit();
+
+        if (isExtraGravOn) manager.PBM.hasFallingExtraGrav = true;
         manager.PBM.FloatingCapsuleActive = true;
     }
+
+    public override void OnStateTriggerEnter(Collider collider)
+    {
+        base.OnStateTriggerEnter(collider);
+        manager.ChangeState(manager.BaseState);
+    }
+
 
     private void AirControl()
     {
@@ -59,7 +83,7 @@ public class HookIntoState : PlayerState
 
         if (grapplePointRelativeYPos < 0) highestPointOnArc = manager.OvershootYAxis;
 
-        manager.rb.linearVelocity = calculateJumpVelocity(manager.transform.position, manager.RUD.GrapplePoint, highestPointOnArc) * 1.2f;
+        manager.rb.linearVelocity = calculateJumpVelocity(manager.transform.position, manager.RUD.GrapplePoint, highestPointOnArc);
     }
 
     private Vector3 calculateJumpVelocity(Vector3 startPoint, Vector3 endPoint, float trajectoryHeight)
@@ -68,7 +92,6 @@ public class HookIntoState : PlayerState
         float displacementY = endPoint.y - startPoint.y;
         Vector3 displacementXZ = new Vector3(endPoint.x - startPoint.x, 0f, endPoint.z - startPoint.z);
 
-        // Ensure trajectoryHeight is always higher than the displacement to avoid NaN
         float optimizedHeight = Mathf.Max(displacementY + 0.1f, trajectoryHeight);
 
         Vector3 velocityY = Vector3.up * Mathf.Sqrt(-2 * gravity * optimizedHeight);
@@ -80,4 +103,5 @@ public class HookIntoState : PlayerState
 
         return velocityXZ + velocityY;
     }
+
 }

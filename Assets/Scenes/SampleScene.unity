@@ -959,12 +959,12 @@ MonoBehaviour:
   invertCamera: 0
   cameraCanMove: 1
   mouseSensitivity: 2
-  maxLookAngle: 70
+  maxLookAngle: 85
   lockCursor: 1
   playerCanMove: 1
   walkSpeed: 10
   acceleration: 50
-  deceleration: 40
+  deceleration: 80
   AirMaxSpeed: 30
   enableJump: 1
   hasVariableJumpHeight: 1
@@ -986,7 +986,7 @@ MonoBehaviour:
   crouchKey: 306
   crouchHeight: 0.75
   speedReduction: 0.5
-  ActiveFloatingCapsule: 0
+  FloatingCapsuleActive: 1
   rideHeight: 1
   rideSpringStrength: 200
   rideSpringDamper: 20
@@ -1051,11 +1051,12 @@ MonoBehaviour:
   JointSpring: 4.5
   JointDamper: 3
   JointMassScale: 4.5
-  AirControlFwdForce: 600
-  AirControlHorizontalForce: 400
+  AirControlFwdForce: 800
+  AirControlHorizontalForce: 600
   SwingDashPower: 6
   SwingDashMaxPower: 17
   SwingDashMinPower: 5
+  Speed: 1
   OvershootYAxis: 2
 --- !u!1 &410087039
 GameObject:
@@ -1345,6 +1346,61 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &929004660
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 929004661}
+  - component: {fileID: 929004662}
+  m_Layer: 3
+  m_Name: ColliderTrigger
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &929004661
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 929004660}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1278625350}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!136 &929004662
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 929004660}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.5
+  m_Height: 2.9709349
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.49273372, z: 0}
 --- !u!1 &932564793
 GameObject:
   m_ObjectHideFlags: 0
@@ -2536,7 +2592,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 929004661}
   m_Father: {fileID: 404075799}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!136 &1278625351
@@ -3193,7 +3250,7 @@ LineRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: -876546973899608171, guid: b4bb8b5c4862a416fa38d705dedc4d96, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

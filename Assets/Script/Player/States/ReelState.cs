@@ -40,8 +40,8 @@ public class ReelState : PlayerState
 
     IEnumerator ReelEnemy()
     {
-        manager.RUD.GrappledObject.transform.DOMove(manager.Guntip.position, 1.5f);
-        yield return new WaitForSeconds(1.5f);
+        manager.RUD.GrappledObject.transform.DOMove(manager.Guntip.position, 0.5f);
+        yield return new WaitForSeconds(0.5f);
         manager.ChangeState(manager.BaseState);
     }
 
