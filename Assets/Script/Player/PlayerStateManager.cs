@@ -7,6 +7,15 @@ public class PlayerStateManager : MonoBehaviour
     public Camera Cam;
     public PlayerRUD RUD = new PlayerRUD();
 
+    [Header("Wall run")]
+    public float WallRunAccel = 50f;
+    public float WallRunMaxSpeed = 12f; 
+    public float WallClimbSpeed = 3f;
+    public float WallJumpForce = 10;
+    public float WallCheckDistance = 1f;
+    public float GroundCheckDistance = 2f;
+    public Transform SideRotateJoint;
+    public LayerMask WallRunable;
     [Header("Grapple")]
     public Transform Guntip;
     public float predictionSphereCastRadius = 3;
@@ -26,7 +35,7 @@ public class PlayerStateManager : MonoBehaviour
     public float SwingDashMaxPower = 18;
     public float SwingDashMinPower = 5;
     [Header("Pull into")]
-    public float Speed = 1f;
+    public float PullIntoSpeed = 1f;
     public float OvershootYAxis = 3f;
 
     #region states
@@ -38,6 +47,7 @@ public class PlayerStateManager : MonoBehaviour
     public PlayerState SwingState = new SwingState();
     public PlayerState ReelState = new ReelState();
     public PlayerState HookIntoState = new HookIntoState();
+    public PlayerState WallRunState = new WallRunningState();
 
     #endregion
 
