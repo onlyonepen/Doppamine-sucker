@@ -1,4 +1,3 @@
-using DG.Tweening;
 using UnityEngine;
 
 public class HookIntoState : PlayerState
@@ -20,15 +19,10 @@ public class HookIntoState : PlayerState
             manager.PBM.hasFallingExtraGrav = false;
         }
 
-        manager.GrappleLr.SetPosition(1, manager.RUD.GrapplePoint);
+        manager.GrappleLr.enabled = true;
+        manager.GrappleLr.positionCount = segmentCount;
 
         manager.rb.linearVelocity = Vector3.zero;
-
-        //float dist = Vector3.Distance(manager.transform.position, manager.RUD.GrapplePoint);
-        //float pullDur = manager.Speed * dist / manager.GrappleMaxDistance * 2;
-        //if (pullDur < 0.5) pullDur = 0.5f;
-        //float overShootY = manager.OvershootYAxis * dist / manager.GrappleMaxDistance * 2;
-        //seq = manager.transform.DOJump(manager.RUD.GrapplePoint, manager.OvershootYAxis, 1, pullDur);
 
         JumpToGrapplePos();
     }
@@ -37,12 +31,17 @@ public class HookIntoState : PlayerState
     {
         base.OnStateUpdate();
 
+        manager.GuntipPointToGrapple();
+
         AirControl();
+
+        float elapsed = Time.time - stateEnterTime;
+        float percent = Mathf.Clamp01(elapsed / .5f);
+        DrawTuggingRope(percent);
 
         if(Time.time - enterTimeStamp > 0.5f)
         {
-            manager.GrapplePrediction();
-            if (Input.GetMouseButtonDown(1)) manager.ChangeState(manager.ThrowGrappleState);
+            manager.ChangeState(manager.BaseState);
         }
 
         manager.GrappleLr.SetPosition(0, manager.Guntip.position);
@@ -51,6 +50,9 @@ public class HookIntoState : PlayerState
     public override void OnStateExit()
     {
         base.OnStateExit();
+
+        manager.GrappleLr.enabled = false;
+        manager.GrappleLr.positionCount = 2;
 
         if (isExtraGravOn) manager.PBM.hasFallingExtraGrav = true;
         manager.PBM.FloatingCapsuleActive = true;
@@ -102,6 +104,41 @@ public class HookIntoState : PlayerState
         Vector3 velocityXZ = displacementXZ / (timeUp + timeDown);
 
         return velocityXZ + velocityY;
+    }
+
+    public int segmentCount = 30;
+    public float maxTugAmplitude = 1.5f; // How far the rope bends at max tug
+
+    void DrawTuggingRope(float percent)
+    {
+        if(percent > 1)
+        {
+            manager.GrappleLr.positionCount = 2;
+            manager.GrappleLr.SetPosition(0, manager.Guntip.position);
+            manager.GrappleLr.SetPosition(1, manager.RUD.GrappledObject.transform.position);
+            return;
+        }
+
+        Vector3 origin = manager.Guntip.position;
+
+        Vector3 target = manager.RUD.GrapplePoint;
+
+        manager.GrappleLr.positionCount = segmentCount;
+
+        float animationLift = Mathf.Sin(percent * Mathf.PI * 2) * maxTugAmplitude;
+
+        for (int i = 0; i < segmentCount; i++)
+        {
+            float t = i / (float)(segmentCount - 1);
+
+            Vector3 pos = Vector3.Lerp(origin, target, t);
+
+            float curveShape = Mathf.Sin(t * Mathf.PI);
+
+            pos += manager.transform.up * (curveShape * animationLift);
+
+            manager.GrappleLr.SetPosition(i, pos);
+        }
     }
 
 }

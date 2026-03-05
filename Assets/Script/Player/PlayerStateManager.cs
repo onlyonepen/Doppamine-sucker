@@ -1,3 +1,4 @@
+using DG.Tweening;
 using UnityEngine;
 
 public class PlayerStateManager : MonoBehaviour
@@ -17,6 +18,7 @@ public class PlayerStateManager : MonoBehaviour
     public Transform SideRotateJoint;
     public LayerMask WallRunable;
     [Header("Grapple")]
+    public Transform grappleGun;
     public Transform Guntip;
     public float predictionSphereCastRadius = 3;
     public Transform predictionPoint;
@@ -123,16 +125,28 @@ public class PlayerStateManager : MonoBehaviour
 
         return finalHit;
     }
+
+    public void GuntipPointToGrapple()
+    {
+        grappleGun.LookAt(RUD.GrapplePoint);
+    }
+    public void GuntipDefault()
+    {
+        grappleGun.DOLocalRotate(Vector3.zero, .5f);
+    }
 }
 
 public abstract class PlayerState
 {
     public PlayerStateManager manager;
     public GameObject player;
+
+    public float stateEnterTime;
     public virtual void OnStateEnter(PlayerStateManager gamestateManager)
     {
         manager = gamestateManager;
         player = manager.gameObject;
+        stateEnterTime = Time.time;
     }
     public virtual void OnStateUpdate() { }
     public virtual void OnStatePhysicsUpdate() { }

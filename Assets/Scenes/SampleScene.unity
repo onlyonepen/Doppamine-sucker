@@ -15,9 +15,9 @@ RenderSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 10
   m_Fog: 0
-  m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  m_FogColor: {r: 0.49448192, g: 0.49448192, b: 0.49448192, a: 1}
   m_FogMode: 3
-  m_FogDensity: 0.01
+  m_FogDensity: 0.02
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
   m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
@@ -853,7 +853,7 @@ MonoBehaviour:
   walkSpeed: 10
   acceleration: 50
   deceleration: 80
-  AirMaxSpeed: 30
+  AirMaxSpeed: 40
   enableJump: 1
   hasVariableJumpHeight: 1
   jumpKey: 32
@@ -934,6 +934,7 @@ MonoBehaviour:
   WallRunable:
     serializedVersion: 2
     m_Bits: 64
+  grappleGun: {fileID: 1904927218}
   Guntip: {fileID: 1291449156}
   predictionSphereCastRadius: 3
   predictionPoint: {fileID: 2076614694}
@@ -985,7 +986,7 @@ Light:
   serializedVersion: 12
   m_Type: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 2
+  m_Intensity: 0.9
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -1028,7 +1029,7 @@ Light:
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
-  m_ColorTemperature: 5000
+  m_ColorTemperature: 4082
   m_UseColorTemperature: 1
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
@@ -3392,8 +3393,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1904927217}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.557, y: 0.742, z: 0.622}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.77, y: 0.742, z: 0.838}
   m_LocalScale: {x: 0.1915, y: 0.1915, z: 0.46161073}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3819,7 +3820,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &2076614694
 Transform:
   m_ObjectHideFlags: 0
@@ -3830,8 +3831,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -2.9086163, y: -10.819844, z: 12.365397}
-  m_LocalScale: {x: 3, y: 3, z: 1.2445551}
-  m_ConstrainProportionsScale: 1
+  m_LocalScale: {x: 2.9999995, y: 2.9999995, z: 1.244555}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1904927218}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

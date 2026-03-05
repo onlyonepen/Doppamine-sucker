@@ -7,6 +7,8 @@ public class PlayerBaseState : PlayerState
     {
         base.OnStateEnter(gamestateManager);
 
+        manager.GuntipDefault();
+
         manager.PBM.playerCanMove = true;
     }
 

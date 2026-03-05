@@ -19,6 +19,7 @@ public class SwingState : PlayerState
         SwingDashed = false;
         GrapplePoint = manager.RUD.GrapplePoint;
         manager.GrappleLr.enabled = true;
+        manager.GrappleLr.positionCount = 2;
         manager.GrappleLr.SetPosition(1, GrapplePoint);
         InnitiateSpring();
     }
@@ -33,6 +34,9 @@ public class SwingState : PlayerState
     public override void OnStateUpdate()
     {
         base.OnStateUpdate();
+
+        manager.GuntipPointToGrapple();
+
         if (Input.GetMouseButtonUp(1)) manager.ChangeState(manager.BaseState);
         if (Input.GetKeyDown(KeyCode.LeftShift)) manager.ChangeState(manager.HookIntoState);
 
