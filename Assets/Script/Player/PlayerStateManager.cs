@@ -46,6 +46,7 @@ public class PlayerStateManager : MonoBehaviour
 
     public PlayerState BaseState = new PlayerBaseState();
     public PlayerState ThrowGrappleState = new ThrowGrappleState();
+    public PlayerState pullRopeBackState = new PullBackRopeState();
     public PlayerState SwingState = new SwingState();
     public PlayerState ReelState = new ReelState();
     public PlayerState HookIntoState = new HookIntoState();

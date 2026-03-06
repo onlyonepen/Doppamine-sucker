@@ -1,5 +1,6 @@
 using DG.Tweening;
 using UnityEngine;
+using static UnityEngine.UI.Image;
 
 public class ThrowGrappleState : PlayerState
 {
@@ -22,13 +23,18 @@ public class ThrowGrappleState : PlayerState
         manager.GrappleLr.enabled = true;
         manager.GrappleLr.positionCount = segmentCount;
 
+        if (grappleCastHit.collider == null)
+        {
+            Debug.Log("not hit");
+            manager.RUD.GrapplePoint = manager.Guntip.position + manager.Cam.transform.forward * manager.GrappleMaxDistance;
+        }
     }
 
     public override void OnStateUpdate()
     {
         base.OnStateUpdate();
 
-        manager.grappleGun.LookAt(grappleCastHit.point);
+        manager.GuntipPointToGrapple();
 
         float elapsed = Time.time - stateEnterTime;
         float percent = Mathf.Clamp01(elapsed / manager.GrappleTravelTime);
@@ -37,18 +43,18 @@ public class ThrowGrappleState : PlayerState
 
         if (Time.time - stateEnterTime > manager.GrappleTravelTime)
         {
+            manager.RUD.GrapplePoint = grappleCastHit.point;
+            if(grappleCastHit.collider != null) manager.RUD.GrappledObject = grappleCastHit.collider.gameObject;
             if (!Input.GetMouseButton(1) || grappleCastHit.collider == null)
             {
-                manager.ChangeState(manager.BaseState);
+                manager.RUD.GrapplePoint = manager.Guntip.position + manager.Cam.transform.forward * manager.GrappleMaxDistance;
+                manager.ChangeState(manager.pullRopeBackState);
                 return;
             }
 
-            manager.RUD.GrapplePoint = grappleCastHit.point;
-            manager.RUD.GrappledObject = grappleCastHit.collider.gameObject;
-
             if ((1 << manager.RUD.GrappledObject.layer & manager.Swingable) != 0) { manager.ChangeState(manager.SwingState); }
             else if ((1 << manager.RUD.GrappledObject.layer & manager.Pullable) != 0) { manager.ChangeState(manager.ReelState); }
-            else manager.ChangeState(manager.BaseState);
+            else manager.ChangeState(manager.pullRopeBackState);
         }
     }
 
@@ -67,6 +73,7 @@ public class ThrowGrappleState : PlayerState
     {
         Vector3 origin = manager.Guntip.position;
         Vector3 targetGoal = grappleCastHit.collider != null ? grappleCastHit.point : origin + manager.Cam.transform.forward * manager.GrappleMaxDistance;
+        //Vector3 targetGoal = manager.RUD.GrapplePoint;
         Vector3 currentTipPos = Vector3.Lerp(origin, targetGoal, percent);
 
         for (int i = 0; i < segmentCount; i++)

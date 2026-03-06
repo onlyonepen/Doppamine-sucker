@@ -36,12 +36,12 @@ public class HookIntoState : PlayerState
         AirControl();
 
         float elapsed = Time.time - stateEnterTime;
-        float percent = Mathf.Clamp01(elapsed / .5f);
+        float percent = Mathf.Clamp01(elapsed / 0.15f);
         DrawTuggingRope(percent);
 
         if(Time.time - enterTimeStamp > 0.5f)
         {
-            manager.ChangeState(manager.BaseState);
+            manager.ChangeState(manager.pullRopeBackState);
         }
 
         manager.GrappleLr.SetPosition(0, manager.Guntip.position);
@@ -61,7 +61,7 @@ public class HookIntoState : PlayerState
     public override void OnStateTriggerEnter(Collider collider)
     {
         base.OnStateTriggerEnter(collider);
-        manager.ChangeState(manager.BaseState);
+        manager.ChangeState(manager.pullRopeBackState);
     }
 
 
@@ -107,7 +107,7 @@ public class HookIntoState : PlayerState
     }
 
     public int segmentCount = 30;
-    public float maxTugAmplitude = 1.5f; // How far the rope bends at max tug
+    public float maxTugAmplitude = .75f; // How far the rope bends at max tug
 
     void DrawTuggingRope(float percent)
     {

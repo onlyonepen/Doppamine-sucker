@@ -37,7 +37,7 @@ public class SwingState : PlayerState
 
         manager.GuntipPointToGrapple();
 
-        if (Input.GetMouseButtonUp(1)) manager.ChangeState(manager.BaseState);
+        if (Input.GetMouseButtonUp(1)) manager.ChangeState(manager.pullRopeBackState);
         if (Input.GetKeyDown(KeyCode.LeftShift)) manager.ChangeState(manager.HookIntoState);
 
         vertInput = Input.GetAxis("Vertical");

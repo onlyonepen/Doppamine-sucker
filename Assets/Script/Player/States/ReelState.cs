@@ -44,12 +44,6 @@ public class ReelState : PlayerState
         manager.PBM.FloatingCapsuleActive = true;
     }
 
-    private void drawRope()
-    {
-        manager.GrappleLr.SetPosition(0, manager.Guntip.position);
-        manager.GrappleLr.SetPosition(1, manager.RUD.GrappledObject.transform.position);
-    }
-
     IEnumerator ReelEnemy()
     {
         //manager.RUD.GrappledObject.transform.DOMove(manager.Guntip.position, 0.5f);
