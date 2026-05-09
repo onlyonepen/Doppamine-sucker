@@ -42,7 +42,6 @@ public class WallRunningState : PlayerState
         manager.rb.useGravity = true;
 
         rotateTween.Kill();
-        manager.SideRotateJoint.DOLocalRotate(new Vector3(0, 0, 0f), 0.5f);
 
         WallJump();
     }
@@ -97,8 +96,8 @@ public class WallRunningState : PlayerState
 
     private void WallRunCheck()
     {
-        wallRight = Physics.Raycast(manager.transform.position, manager.Cam.transform.right, out rightWallHit, manager.WallCheckDistance, manager.WallRunable);
-        wallLeft = Physics.Raycast(manager.transform.position, -manager.Cam.transform.right, out leftWallHit, manager.WallCheckDistance, manager.WallRunable);
+        wallRight = Physics.Raycast(manager.transform.position, manager.Cam.transform.right, out rightWallHit, manager.WallCheckDistance, manager.TerrainLayer);
+        wallLeft = Physics.Raycast(manager.transform.position, -manager.Cam.transform.right, out leftWallHit, manager.WallCheckDistance, manager.TerrainLayer);
         bool grounded = Physics.Raycast(manager.transform.position, Vector3.down, manager.GroundCheckDistance, LayerMask.GetMask("Ground"));
 
         if(grounded || (!wallLeft && !wallRight))

@@ -8,6 +8,9 @@ public class PlayerStateManager : MonoBehaviour
     public Camera Cam;
     public PlayerRUD RUD = new PlayerRUD();
 
+    [Header("BasicReference")]
+    public LayerMask TerrainLayer;
+    public Transform feetTrans;
     [Header("Wall run")]
     public float WallRunAccel = 50f;
     public float WallRunMaxSpeed = 12f; 
@@ -16,7 +19,13 @@ public class PlayerStateManager : MonoBehaviour
     public float WallCheckDistance = 1f;
     public float GroundCheckDistance = 2f;
     public Transform SideRotateJoint;
-    public LayerMask WallRunable;
+    [Header("Sliding")]
+    public float SlideSpeedMult = 0.2f;
+    public float SlideSpeedTreshold = 2f;
+    public float SlideFriction = 0.8f;
+    [Header("Mantle")]
+    public float PlayerHeightOffset = 1.6f;
+    public float MantleFrontCastDist = 1.2f;
     [Header("Grapple")]
     public Transform grappleGun;
     public Transform Guntip;
@@ -51,6 +60,8 @@ public class PlayerStateManager : MonoBehaviour
     public PlayerState ReelState = new ReelState();
     public PlayerState HookIntoState = new HookIntoState();
     public PlayerState WallRunState = new WallRunningState();
+    public PlayerState MantleState = new MantleState();
+    public PlayerState SlideState = new SlideState();
 
     #endregion
 
@@ -135,6 +146,25 @@ public class PlayerStateManager : MonoBehaviour
     {
         grappleGun.DOLocalRotate(Vector3.zero, .5f);
     }
+
+    public void WaitToChangeState(PlayerState state, float WaitDur , float EnterTime)
+    {
+        if(Time.time - EnterTime > WaitDur)
+        {
+            ChangeState(state);
+        }
+    }
+
+    public Vector3 GroundNormal()
+    {
+        if(!PBM.isGrounded) return Vector3.zero;
+        else
+        {
+            RaycastHit hit;
+            Physics.Raycast(transform.position, Vector3.down, out hit, 5f, TerrainLayer);
+            return hit.normal;
+        }
+    }
 }
 
 public abstract class PlayerState
@@ -159,4 +189,5 @@ public class PlayerRUD
 {
     [HideInInspector] public Vector3 GrapplePoint;
     [HideInInspector] public GameObject GrappledObject;
+    [HideInInspector] public Vector3 MantlePoint;
 }

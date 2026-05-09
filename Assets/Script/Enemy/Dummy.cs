@@ -3,6 +3,9 @@ using UnityEngine;
 public class Dummy : MonoBehaviour, IDamagable
 {
     private Rigidbody rb;
+    public ParticleSystem deadParticle;
+
+    public PlayerAttackArea attackArea;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -18,9 +21,10 @@ public class Dummy : MonoBehaviour, IDamagable
     }
 
 
-    // Update is called once per frame
-    void Update()
+    private void OnDestroy()
     {
-        
+        deadParticle.gameObject.transform.parent = null;
+        attackArea.InArea.Remove(gameObject);
+        deadParticle.Play();
     }
 }

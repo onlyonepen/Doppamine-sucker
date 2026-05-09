@@ -15,6 +15,7 @@ MonoBehaviour:
   sceneDatas_byGuid:
     keys:
     - 99c9720ab356a0642a771bea13969a05
+    - eb5c9f4c9a1fb5947ad33db3352e85d8
     values:
     - goDatas_byGlobalId:
         keys:
@@ -44,5 +45,33 @@ MonoBehaviour:
           iconNameOrGuid: ReflectionProbe Icon
           isIconRecursive: 0
           isColorRecursive: 1
+    - goDatas_byGlobalId:
+        keys:
+        - globalObjectIdString: GlobalObjectId_V1-2-eb5c9f4c9a1fb5947ad33db3352e85d8-2102409991-0
+        - globalObjectIdString: GlobalObjectId_V1-2-eb5c9f4c9a1fb5947ad33db3352e85d8-404075795-0
+        - globalObjectIdString: GlobalObjectId_V1-2-eb5c9f4c9a1fb5947ad33db3352e85d8-1091109035-0
+        - globalObjectIdString: GlobalObjectId_V1-2-eb5c9f4c9a1fb5947ad33db3352e85d8-220959168-0
+        - globalObjectIdString: GlobalObjectId_V1-2-eb5c9f4c9a1fb5947ad33db3352e85d8-281644727-0
+        values:
+        - colorIndex: 4
+          iconNameOrGuid: Terrain Icon
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 7
+          iconNameOrGuid: AvatarMask On Icon
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 0
+          iconNameOrGuid: Camera Icon
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 3
+          iconNameOrGuid: Canvas Icon
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 9
+          iconNameOrGuid: ReflectionProbe Icon
+          isIconRecursive: 0
+          isColorRecursive: 0
   bookmarks: []
   bookmarkedScenePaths: []

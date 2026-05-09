@@ -31,7 +31,7 @@ public class PlayerBaseMovement : MonoBehaviour
     [Header("Movement")]
 
     public bool playerCanMove = true;
-    [SerializeField] private float walkSpeed = 8f;
+    public float walkSpeed = 8f;
     [SerializeField] private float acceleration = 50f; 
     [SerializeField] private float deceleration = 40f;
     [SerializeField] private float AirMaxSpeed = 20f;  
@@ -52,7 +52,7 @@ public class PlayerBaseMovement : MonoBehaviour
     // Internal Variables
     private float jumpMuteTimer = 0f;
     private const float jumpMuteDuration = 0.2f; // How long to ignore the spring (seconds)
-    private bool isGrounded = false;
+    [HideInInspector] public bool isGrounded = false;
     private float coyoteTimer = 0;
     private float bufferingTimer = 0;
     private bool isExtraGravOn = false;
@@ -107,7 +107,7 @@ public class PlayerBaseMovement : MonoBehaviour
 
     [HideInInspector] public bool FloatingCapsuleActive = true;
 
-    [SerializeField] private float rideHeight = 1.5f; // Desired height above ground
+    public float rideHeight = 1.5f; // Desired height above ground
     [SerializeField] private float rideSpringStrength = 50f; // How "stiff" the hover is
     [SerializeField] private float rideSpringDamper = 5f;
 
@@ -342,7 +342,7 @@ public class PlayerBaseMovement : MonoBehaviour
         }
     }
 
-    private void Jump()
+    public void Jump()
     {
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
         rb.AddForce(0f, jumpPower, 0f, ForceMode.Impulse);
