@@ -54,7 +54,7 @@ public class PlayerAttacking : MonoBehaviour
         {
             if (obj.TryGetComponent<IDamagable>(out var damagable))
             {
-                damagable.TakeDamage(dmg, gameObject.transform, Knockback);
+                damagable.TakeDamage();
             }
         }
     }

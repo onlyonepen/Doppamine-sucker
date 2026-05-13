@@ -12,12 +12,9 @@ public class Dummy : MonoBehaviour, IDamagable
         rb = GetComponent<Rigidbody>();
     }
 
-    public void TakeDamage(float dmg, Transform origin, float knockback)
+    public void TakeDamage()
     {
-        Debug.Log(gameObject.name + "Take damage");
-        rb.linearVelocity = Vector3.zero;
-        Vector3 dir = gameObject.transform.position - origin.position;
-        rb.AddForce(dir.normalized * knockback, ForceMode.Impulse);
+
     }
 
 

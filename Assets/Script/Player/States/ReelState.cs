@@ -5,12 +5,16 @@ using UnityEngine;
 public class ReelState : PlayerState
 {
     //bool isExtraGravOn;
+    private float airFloatForce = 10f;
 
     private SpringJoint joint;
 
     GameObject grappledObj;
     Vector3 initialObjPos;
 
+    bool grappleEnemy = false;
+    private EnemySM sm;
+    
     public override void OnStateEnter(PlayerStateManager gamestateManager)
     {
         base.OnStateEnter(gamestateManager);
@@ -18,16 +22,12 @@ public class ReelState : PlayerState
         grappledObj = manager.RUD.GrappledObject;
         initialObjPos = grappledObj.transform.position;
 
-        //joint = grappledObj.gameObject.AddComponent<SpringJoint>();
-        //joint.autoConfigureConnectedAnchor = false;
-        //joint.maxDistance = 0;
-        //joint.minDistance = 0;
-        //joint.spring = 10;
-        //joint.damper = 3;
-
-
-        //manager.GrappleLr.enabled = true;
-
+        if (grappledObj.transform.parent.TryGetComponent<EnemySM>( out var component))
+        {
+            component.Grappled();
+            grappleEnemy = true;
+            sm = component;
+        }
     }
 
     public override void OnStateUpdate()
@@ -37,8 +37,6 @@ public class ReelState : PlayerState
         manager.RUD.GrapplePoint = grappledObj.transform.position;
         manager.GuntipPointToGrapple();
 
-        //joint.connectedAnchor = manager.transform.position;
-
         float elapsed = Time.time - stateEnterTime;
         float percent = Mathf.Clamp01(elapsed / .5f);
         DrawTuggingRope(percent);
@@ -47,6 +45,8 @@ public class ReelState : PlayerState
         {
             manager.ChangeState(manager.pullRopeBackState);
         }
+        
+        manager.rb.AddForce(Vector3.up * airFloatForce, ForceMode.Acceleration);
     }
 
     public override void OnStateExit()
@@ -54,7 +54,8 @@ public class ReelState : PlayerState
         base.OnStateExit();
         manager.GrappleLr.enabled = false;
         grappledObj.GetComponent<Rigidbody>().linearVelocity = Vector3.zero;
-        MonoBehaviour.Destroy(grappledObj);
+        
+        if(grappleEnemy) sm.TakeDamage();
     }
 
     private void UpdateObjectPos(float percent)

@@ -11,6 +11,8 @@ public class ThrowGrappleState : PlayerState
     private float waveFrequency = 2f;
     private float waveSpeed = 15f;
 
+    private Vector3 InitialHitPos;
+    
     public override void OnStateEnter(PlayerStateManager gamestateManager)
     {
         base.OnStateEnter(gamestateManager);
@@ -25,7 +27,6 @@ public class ThrowGrappleState : PlayerState
 
         if (grappleCastHit.collider == null)
         {
-            Debug.Log("not hit");
             manager.RUD.GrapplePoint = manager.Guntip.position + manager.Cam.transform.forward * manager.GrappleMaxDistance;
         }
     }
@@ -36,18 +37,25 @@ public class ThrowGrappleState : PlayerState
 
         manager.GuntipPointToGrapple();
 
+        if (grappleCastHit.collider != null)
+        {
+            manager.RUD.GrapplePoint = grappleCastHit.point;
+        }
+
         float elapsed = Time.time - stateEnterTime;
         float percent = Mathf.Clamp01(elapsed / manager.GrappleTravelTime);
 
         DrawAnimatedRope(percent);
 
         if (Time.time - stateEnterTime > manager.GrappleTravelTime)
-        {
-            manager.RUD.GrapplePoint = grappleCastHit.point;
-            if(grappleCastHit.collider != null) manager.RUD.GrappledObject = grappleCastHit.collider.gameObject;
+        { 
+            if(grappleCastHit.collider != null)
+            {
+                manager.RUD.GrappledObject = grappleCastHit.collider.gameObject;
+            }
             if (!Input.GetMouseButton(1) || grappleCastHit.collider == null)
             {
-                manager.RUD.GrapplePoint = manager.Guntip.position + manager.Cam.transform.forward * manager.GrappleMaxDistance;
+                //manager.RUD.GrapplePoint = manager.Guntip.position + manager.Cam.transform.forward * manager.GrappleMaxDistance;
                 manager.ChangeState(manager.pullRopeBackState);
                 return;
             }
@@ -64,16 +72,14 @@ public class ThrowGrappleState : PlayerState
 
         manager.GrappleLr.enabled = false;
         manager.GrappleLr.positionCount = 2;
-
-        manager.predictionPoint.gameObject.SetActive(false);
     }
 
 
-    void DrawAnimatedRope(float percent)
+    private void DrawAnimatedRope(float percent)
     {
         Vector3 origin = manager.Guntip.position;
-        Vector3 targetGoal = grappleCastHit.collider != null ? grappleCastHit.point : origin + manager.Cam.transform.forward * manager.GrappleMaxDistance;
-        //Vector3 targetGoal = manager.RUD.GrapplePoint;
+        //Vector3 targetGoal = grappleCastHit.collider != null ? grappleCastHit.point : origin + manager.Cam.transform.forward * manager.GrappleMaxDistance;
+        Vector3 targetGoal = manager.RUD.GrapplePoint;
         Vector3 currentTipPos = Vector3.Lerp(origin, targetGoal, percent);
 
         for (int i = 0; i < segmentCount; i++)

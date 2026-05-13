@@ -10,10 +10,12 @@ public class SlideState : PlayerState
         base.OnStateEnter(gamestateManager);
         manager.PBM.playerCanMove = false;
 
-        Transform child = manager.transform.GetChild(0);
-        child.SetParent(null); // Unparent
-        manager.transform.localScale = new Vector3(1,.5f,1); // Scale parent
-        child.SetParent(manager.transform);
+        //Transform child = manager.transform.GetChild(0);
+        //child.SetParent(null); // Unparent
+        manager.transform.localScale = new Vector3(1, .5f, 1); // Scale parent
+        //child.SetParent(manager.transform);
+
+        manager.GuntipDefault();
     }
 
     public override void OnStateUpdate()
@@ -23,6 +25,8 @@ public class SlideState : PlayerState
         manager.GrapplePrediction();
 
         SlideLogic();
+
+        if (Input.GetMouseButtonDown(1)) manager.ChangeState(manager.ThrowGrappleState);
     }
 
     public override void OnStatePhysicsUpdate()
@@ -34,10 +38,10 @@ public class SlideState : PlayerState
     {
         base.OnStateExit();
 
-        Transform child = manager.transform.GetChild(0);
-        child.SetParent(null); // Unparent
+        //Transform child = manager.transform.getc(0);
+        //child.SetParent(null); // Unparent
         manager.transform.localScale = Vector3.one; // Scale parent
-        child.SetParent(manager.transform);
+        //child.SetParent(manager.transform);
     }
 
     private void SlideLogic()

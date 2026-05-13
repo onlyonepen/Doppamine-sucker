@@ -32,6 +32,10 @@ public class WallRunningState : PlayerState
         if (wallRight) rotateTween = manager.SideRotateJoint.DOLocalRotate(new Vector3(0, 0, 15f), 0.5f);
 
         WallRunMovement();
+        
+        manager.GrapplePrediction();
+        
+        if (Input.GetMouseButtonDown(1)) manager.ChangeState(manager.ThrowGrappleState);
 
         if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyUp(KeyCode.W)) manager.ChangeState(manager.BaseState);
     }

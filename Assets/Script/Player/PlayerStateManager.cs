@@ -95,9 +95,16 @@ public class PlayerStateManager : MonoBehaviour
 
     public RaycastHit GrapplePrediction()
     {
+        Vector3 startSpherecasPos = Cam.transform.position + (Cam.transform.forward * GrappleMaxDistance);
+
+        RaycastHit SphereCastHitOutward;
+        bool sphereHitOutward = Physics.SphereCast(Cam.transform.position, predictionSphereCastRadius, Cam.transform.forward,
+                            out SphereCastHitOutward, GrappleMaxDistance, Swingable | Pullable);
+        
         RaycastHit sphereCastHit;
-        bool sphereHit = Physics.SphereCast(Cam.transform.position, predictionSphereCastRadius, Cam.transform.forward,
-                            out sphereCastHit, GrappleMaxDistance, Swingable | Pullable);
+        bool sphereHit = Physics.SphereCast(startSpherecasPos, predictionSphereCastRadius, -Cam.transform.forward,
+            out sphereCastHit, GrappleMaxDistance - 5, Swingable | Pullable);
+
         RaycastHit raycastHit;
         bool rayHit = Physics.Raycast(Cam.transform.position, Cam.transform.forward,
                             out raycastHit, GrappleMaxDistance, Swingable | Pullable);
@@ -106,9 +113,9 @@ public class PlayerStateManager : MonoBehaviour
         bool hasValidHit = false;
 
         // 2. Logic: If SphereCast hit a "Pullable" object, it takes absolute priority.
-        if (sphereHit && ((1 << sphereCastHit.collider.gameObject.layer) & Pullable) != 0)
+        if (sphereHitOutward && ((1 << SphereCastHitOutward.collider.gameObject.layer) & Pullable) != 0)
         {
-            finalHit = sphereCastHit;
+            finalHit = SphereCastHitOutward;
             hasValidHit = true;
         }
         // 3. Otherwise, fall back to the precise Raycast if it hit anything.
