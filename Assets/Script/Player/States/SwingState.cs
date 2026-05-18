@@ -38,7 +38,7 @@ public class SwingState : PlayerState
         manager.GuntipPointToGrapple();
 
         if (Input.GetMouseButtonUp(1)) manager.ChangeState(manager.pullRopeBackState);
-        if (Input.GetKeyDown(KeyCode.LeftShift)) manager.ChangeState(manager.HookIntoState);
+        if (Input.GetKeyDown(KeyCode.LeftShift) && manager.UseEnergy(manager.GrappleLeapUsage)) manager.ChangeState(manager.GrappleLeapState);
 
         vertInput = Input.GetAxis("Vertical");
         horiInput = Input.GetAxis("Horizontal");
@@ -98,7 +98,7 @@ public class SwingState : PlayerState
 
     private void SwingDash()
     {
-        if (Input.GetKeyDown(KeyCode.Space) && !SwingDashed)
+        if (Input.GetKeyDown(KeyCode.Space) && !SwingDashed && manager.UseEnergy(manager.GrappleDashUsage))
         {
             float dashForce = manager.rb.linearVelocity.magnitude * manager.SwingDashPower * currentDist * 0.001f;
             float initialVelocity = manager.rb.linearVelocity.magnitude;
@@ -107,7 +107,6 @@ public class SwingState : PlayerState
 
             newForce = Mathf.Clamp(newForce, manager.SwingDashMinPower, manager.SwingDashMaxPower);
             manager.rb.AddForce(manager.Cam.transform.forward.normalized * newForce, ForceMode.VelocityChange);
-            Debug.Log("Dash for " + newForce);
             //joint.maxDistance *= 1.2f;
             SwingDashed = true;
         }

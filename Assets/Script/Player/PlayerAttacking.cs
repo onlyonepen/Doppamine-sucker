@@ -1,12 +1,11 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerAttacking : MonoBehaviour
 {
     [SerializeField] private PlayerAttackArea attackArea;
     [SerializeField] private PlayerStateManager stateManager;
-    public float AttackDamage = 1;
-    public float Knockback = 5f;
     public Coroutine Attack1Cou;
 
     [HideInInspector] bool IsAttacking = false;
@@ -37,8 +36,8 @@ public class PlayerAttacking : MonoBehaviour
         IsAttacking = true;
         attackAgain = false;
 
-        yield return new WaitForSeconds(0.2f);
-        Attack1(AttackDamage);
+        yield return new WaitForSeconds(0.1f);
+        Attack1();
 
         if (attackAgain)
         {
@@ -48,13 +47,22 @@ public class PlayerAttacking : MonoBehaviour
         IsAttacking = false;
     }
 
-    public void Attack1(float dmg)
+    public void Attack1()
     {
-        foreach(GameObject obj in attackArea.InArea)
+        HashSet<IDamagable> hitTargets = new();
+
+        foreach (GameObject obj in attackArea.InArea)
         {
-            if (obj.TryGetComponent<IDamagable>(out var damagable))
+            // Use GetComponentInParent to look up the hierarchy if needed
+            var damagable = obj.GetComponentInParent<IDamagable>();
+        
+            if (damagable != null)
             {
-                damagable.TakeDamage();
+                if (hitTargets.Add(damagable))
+                {
+                    // Don't forget to pass your 'dmg' variable here if your interface supports it!
+                    damagable.TakeDamage(); 
+                }
             }
         }
     }

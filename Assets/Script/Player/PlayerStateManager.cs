@@ -1,14 +1,25 @@
 using DG.Tweening;
 using UnityEngine;
+using VInspector;
 
 public class PlayerStateManager : MonoBehaviour
 {
+    [Header("Energy")]
+    public float MaxEnergy = 100f;
+    public float InitialThrowUsage = 20;
+    public float GrappleLeapUsage = 40;
+    public float GrappleDashUsage = 10;
+    
+    public float EnergyRegeneration = 5f;
+    public float GroundedEnergyRegeneration = 50f;
+
+    public float currentEnergy;
+    
+    [Header("BasicReference")]
     public Rigidbody rb;
     public PlayerBaseMovement PBM;
     public Camera Cam;
     public PlayerRUD RUD = new PlayerRUD();
-
-    [Header("BasicReference")]
     public LayerMask TerrainLayer;
     public Transform feetTrans;
     [Header("Wall run")]
@@ -35,6 +46,7 @@ public class PlayerStateManager : MonoBehaviour
     public float GrappleTravelTime;
     public LayerMask Swingable;
     public LayerMask Pullable;
+    public LayerMask HeavyPull;
     public LineRenderer GrappleLr;
     [Header("Swinging")]
     public float JointSpring = 4.5f;
@@ -57,8 +69,8 @@ public class PlayerStateManager : MonoBehaviour
     public PlayerState ThrowGrappleState = new ThrowGrappleState();
     public PlayerState pullRopeBackState = new PullBackRopeState();
     public PlayerState SwingState = new SwingState();
-    public PlayerState ReelState = new ReelState();
-    public PlayerState HookIntoState = new HookIntoState();
+    public PlayerState ReelState = new GrapplePullState();
+    public PlayerState GrappleLeapState = new GrappleLeapState();
     public PlayerState WallRunState = new WallRunningState();
     public PlayerState MantleState = new MantleState();
     public PlayerState SlideState = new SlideState();
@@ -69,11 +81,14 @@ public class PlayerStateManager : MonoBehaviour
     {
         CurrentState = BaseState;
         CurrentState.OnStateEnter(this);
+
+        currentEnergy = MaxEnergy;
     }
 
     void Update()
     {
         CurrentState.OnStateUpdate();
+        EnergyRegen();
     }
 
     void FixedUpdate()
@@ -87,35 +102,39 @@ public class PlayerStateManager : MonoBehaviour
         CurrentState = state;
         CurrentState.OnStateEnter(this);
     }
-
     private void OnTriggerEnter(Collider other)
     {
         CurrentState.OnStateTriggerEnter(other);
     }
-
     public RaycastHit GrapplePrediction()
     {
+        LayerMask AssisiPriority = HeavyPull | Pullable;
+        
         Vector3 startSpherecasPos = Cam.transform.position + (Cam.transform.forward * GrappleMaxDistance);
 
-        RaycastHit SphereCastHitOutward;
+        RaycastHit sphereCastHitOutward;
         bool sphereHitOutward = Physics.SphereCast(Cam.transform.position, predictionSphereCastRadius, Cam.transform.forward,
-                            out SphereCastHitOutward, GrappleMaxDistance, Swingable | Pullable);
+                            out sphereCastHitOutward, GrappleMaxDistance, Swingable | AssisiPriority);
         
-        RaycastHit sphereCastHit;
-        bool sphereHit = Physics.SphereCast(startSpherecasPos, predictionSphereCastRadius, -Cam.transform.forward,
-            out sphereCastHit, GrappleMaxDistance - 5, Swingable | Pullable);
+        RaycastHit sphereCastHitInward;
+        bool sphereHitInward = Physics.SphereCast(startSpherecasPos, predictionSphereCastRadius, -Cam.transform.forward,
+            out sphereCastHitInward, GrappleMaxDistance - 5, Swingable | AssisiPriority);
 
         RaycastHit raycastHit;
         bool rayHit = Physics.Raycast(Cam.transform.position, Cam.transform.forward,
-                            out raycastHit, GrappleMaxDistance, Swingable | Pullable);
+                            out raycastHit, GrappleMaxDistance, Swingable | AssisiPriority);
 
         RaycastHit finalHit = new RaycastHit();
         bool hasValidHit = false;
 
         // 2. Logic: If SphereCast hit a "Pullable" object, it takes absolute priority.
-        if (sphereHitOutward && ((1 << SphereCastHitOutward.collider.gameObject.layer) & Pullable) != 0)
+        bool sphereHitOutwardHitEnemy = sphereHitOutward &&
+                                        ((1 << sphereCastHitOutward.collider.gameObject.layer) & AssisiPriority) != 0;
+        bool sphereHitInwardHitEnemy = sphereHitInward &&
+                                       ((1 << sphereCastHitInward.collider.gameObject.layer) & AssisiPriority) != 0;
+        if (sphereHitInwardHitEnemy || sphereHitOutwardHitEnemy)
         {
-            finalHit = SphereCastHitOutward;
+            finalHit = sphereCastHitOutward;
             hasValidHit = true;
         }
         // 3. Otherwise, fall back to the precise Raycast if it hit anything.
@@ -125,9 +144,9 @@ public class PlayerStateManager : MonoBehaviour
             hasValidHit = true;
         }
         // 4. Last resort: use SphereCast for Swingables if Raycast missed.
-        else if (sphereHit)
+        else if (sphereHitInward)
         {
-            finalHit = sphereCastHit;
+            finalHit = sphereCastHitInward;
             hasValidHit = true;
         }
 
@@ -144,7 +163,6 @@ public class PlayerStateManager : MonoBehaviour
 
         return finalHit;
     }
-
     public void GuntipPointToGrapple()
     {
         grappleGun.LookAt(RUD.GrapplePoint);
@@ -153,7 +171,6 @@ public class PlayerStateManager : MonoBehaviour
     {
         grappleGun.DOLocalRotate(Vector3.zero, .5f);
     }
-
     public void WaitToChangeState(PlayerState state, float WaitDur , float EnterTime)
     {
         if(Time.time - EnterTime > WaitDur)
@@ -161,7 +178,6 @@ public class PlayerStateManager : MonoBehaviour
             ChangeState(state);
         }
     }
-
     public Vector3 GroundNormal()
     {
         if(!PBM.isGrounded) return Vector3.zero;
@@ -171,6 +187,30 @@ public class PlayerStateManager : MonoBehaviour
             Physics.Raycast(transform.position, Vector3.down, out hit, 5f, TerrainLayer);
             return hit.normal;
         }
+    }
+
+    public bool UseEnergy(float Usage)
+    {
+        if (currentEnergy - Usage >= 0)
+        {
+            currentEnergy -= Usage;
+            return true;
+        }
+        else return false;
+    }
+
+    private void EnergyRegen()
+    {
+        float Regen;
+        if (PBM.isGrounded || CurrentState == WallRunState) Regen = GroundedEnergyRegeneration;
+        else if (CurrentState == SwingState) Regen = 0;
+        else Regen = EnergyRegeneration;
+
+        if (currentEnergy + Regen * Time.deltaTime <= MaxEnergy)
+        {
+            currentEnergy += Regen * Time.deltaTime;
+        }
+        else currentEnergy = MaxEnergy;
     }
 }
 

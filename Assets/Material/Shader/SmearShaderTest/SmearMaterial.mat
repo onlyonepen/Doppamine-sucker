@@ -55,6 +55,6 @@ Material:
     - _QueueControl: 0
     - _QueueOffset: 0
     m_Colors:
-    - _PreviousPos: {r: 9.49, g: 5.1, b: 8.6, a: 0}
+    - _PreviousPos: {r: 8.19371, g: 3.15764, b: 10.95475, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

@@ -28,7 +28,7 @@ public class PlayerBaseState : PlayerState
         WallRunCheck();
         MantleCheck();
         SlideCheck();
-        if (Input.GetMouseButtonDown(1)) manager.ChangeState(manager.ThrowGrappleState);
+        if (Input.GetMouseButtonDown(1) && manager.UseEnergy(manager.InitialThrowUsage)) manager.ChangeState(manager.ThrowGrappleState);
     }
 
     private void WallRunCheck()

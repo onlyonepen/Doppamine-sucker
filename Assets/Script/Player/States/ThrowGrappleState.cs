@@ -62,6 +62,7 @@ public class ThrowGrappleState : PlayerState
 
             if ((1 << manager.RUD.GrappledObject.layer & manager.Swingable) != 0) { manager.ChangeState(manager.SwingState); }
             else if ((1 << manager.RUD.GrappledObject.layer & manager.Pullable) != 0) { manager.ChangeState(manager.ReelState); }
+            else if((1 << manager.RUD.GrappledObject.layer & manager.HeavyPull) != 0) { manager.ChangeState(manager.GrappleLeapState); }
             else manager.ChangeState(manager.pullRopeBackState);
         }
     }
