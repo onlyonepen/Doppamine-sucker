@@ -6,7 +6,7 @@ namespace Script.Enemy.EnemiesStats
     public class EnemyStatSO : ScriptableObject
     {
         public float DetectionRange;
-        public float Acceleration;
-        public float MaxSpeed;
+        public float MoveSpeed;
+        public float AttackFrequentcy;
     }
 }

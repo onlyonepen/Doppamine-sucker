@@ -90,8 +90,6 @@ public class PlayerBaseState : PlayerState
         float angelBetween = Vector3.Angle(playerfwd, groundNormal);
         bool canSlideWithSlope = angelBetween < 85 && angelBetween > 50;
         bool canSlideFlatGround = angelBetween >= 85 && manager.rb.linearVelocity.magnitude > manager.PBM.walkSpeed;
-        Debug.Log("groun = " + groundNormal);
-        Debug.Log(angelBetween);
         if (canSlideWithSlope || canSlideFlatGround)
         {
             manager.ChangeState(manager.SlideState);

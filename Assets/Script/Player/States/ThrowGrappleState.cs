@@ -25,7 +25,12 @@ public class ThrowGrappleState : PlayerState
         manager.GrappleLr.enabled = true;
         manager.GrappleLr.positionCount = segmentCount;
 
-        if (grappleCastHit.collider == null)
+        if(grappleCastHit.collider != null)
+        {
+            manager.RUD.GrappledObject = grappleCastHit.collider.gameObject;
+            manager.RUD.GrapplePoint = grappleCastHit.point;
+        }
+        else
         {
             manager.RUD.GrapplePoint = manager.Guntip.position + manager.Cam.transform.forward * manager.GrappleMaxDistance;
         }
@@ -37,10 +42,10 @@ public class ThrowGrappleState : PlayerState
 
         manager.GuntipPointToGrapple();
 
-        if (grappleCastHit.collider != null)
-        {
-            manager.RUD.GrapplePoint = grappleCastHit.point;
-        }
+        //if (grappleCastHit.collider != null)
+        //{
+        //    manager.RUD.GrapplePoint = grappleCastHit.point;
+        //}
 
         float elapsed = Time.time - stateEnterTime;
         float percent = Mathf.Clamp01(elapsed / manager.GrappleTravelTime);
@@ -49,10 +54,10 @@ public class ThrowGrappleState : PlayerState
 
         if (Time.time - stateEnterTime > manager.GrappleTravelTime)
         { 
-            if(grappleCastHit.collider != null)
-            {
-                manager.RUD.GrappledObject = grappleCastHit.collider.gameObject;
-            }
+            //if(grappleCastHit.collider != null)
+            //{
+            //    manager.RUD.GrappledObject = grappleCastHit.collider.gameObject;
+            //}
             if (!Input.GetMouseButton(1) || grappleCastHit.collider == null)
             {
                 //manager.RUD.GrapplePoint = manager.Guntip.position + manager.Cam.transform.forward * manager.GrappleMaxDistance;
@@ -61,8 +66,8 @@ public class ThrowGrappleState : PlayerState
             }
 
             if ((1 << manager.RUD.GrappledObject.layer & manager.Swingable) != 0) { manager.ChangeState(manager.SwingState); }
-            else if ((1 << manager.RUD.GrappledObject.layer & manager.Pullable) != 0) { manager.ChangeState(manager.ReelState); }
-            else if((1 << manager.RUD.GrappledObject.layer & manager.HeavyPull) != 0) { manager.ChangeState(manager.GrappleLeapState); }
+            else if ((1 << manager.RUD.GrappledObject.layer & manager.Pullable) != 0) { manager.ChangeState(manager.GrapplePullState); }
+            else if((1 << manager.RUD.GrappledObject.layer & manager.HeavyPull) != 0) { manager.ChangeState(manager.GrapplePullinState); }
             else manager.ChangeState(manager.pullRopeBackState);
         }
     }
@@ -79,8 +84,8 @@ public class ThrowGrappleState : PlayerState
     private void DrawAnimatedRope(float percent)
     {
         Vector3 origin = manager.Guntip.position;
-        //Vector3 targetGoal = grappleCastHit.collider != null ? grappleCastHit.point : origin + manager.Cam.transform.forward * manager.GrappleMaxDistance;
         Vector3 targetGoal = manager.RUD.GrapplePoint;
+        if((1 << manager.RUD.GrappledObject.layer & GlobalReference.Instance.EnemyLayer) != 0) targetGoal = manager.RUD.GrappledObject.transform.position;
         Vector3 currentTipPos = Vector3.Lerp(origin, targetGoal, percent);
 
         for (int i = 0; i < segmentCount; i++)

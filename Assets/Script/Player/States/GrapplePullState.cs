@@ -1,5 +1,6 @@
 using DG.Tweening;
 using System.Collections;
+using Script.Enemy;
 using UnityEngine;
 
 public class GrapplePullState : PlayerState
@@ -12,7 +13,10 @@ public class GrapplePullState : PlayerState
     GameObject grappledObj;
     Vector3 initialObjPos;
 
-    //bool grappleEnemy = false;
+    bool grappleEnemy = false;
+    private BaseRangedEmemy enemy;
+
+    private Vector3 initialVelocity;
     
     public override void OnStateEnter(PlayerStateManager gamestateManager)
     {
@@ -21,14 +25,15 @@ public class GrapplePullState : PlayerState
         grappledObj = manager.RUD.GrappledObject;
         initialObjPos = grappledObj.transform.position;
 
-        //if (grappledObj.transform.parent.TryGetComponent<GroundedEnemySM>( out var component))
-        //{
-        //    component.Grappled();
-        //    grappleEnemy = true;
-        //   sm = component;
-        //}
+        if (grappledObj.TryGetComponent<BaseRangedEmemy>( out var component))
+        {
+            component.GetPull();
+            grappleEnemy = true;
+            enemy = component;
+        }
         
-        manager.rb.linearVelocity = manager.rb.linearVelocity * 0.2f;
+        initialVelocity = manager.rb.linearVelocity;
+        manager.rb.linearVelocity *= 0.2f;
     }
 
     public override void OnStateUpdate()
@@ -56,8 +61,8 @@ public class GrapplePullState : PlayerState
         manager.GrappleLr.enabled = false;
         grappledObj.GetComponent<Rigidbody>().linearVelocity = Vector3.zero;
         
-        //if(grappleEnemy) sm.TakeDamage();
-        manager.rb.linearVelocity = manager.rb.linearVelocity * 5f;
+        if(grappleEnemy) enemy.TakeDamage();
+        manager.rb.linearVelocity = initialVelocity;
     }
 
     private void UpdateObjectPos(float percent)

@@ -5,7 +5,8 @@ public class GlobalReference : MonoBehaviour
     public PlayerStateManager player;
     public LayerMask playerLayer;
     public LayerMask TerrainLayer;
-
+    public LayerMask EnemyLayer;
+    
     public static GlobalReference Instance { get; private set; }
     private void Awake()
     {

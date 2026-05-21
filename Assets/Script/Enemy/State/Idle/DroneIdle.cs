@@ -4,6 +4,12 @@ namespace Script.Enemy.State.Idle
 {
     public class DroneIdle : EnemyBaseState
     {
+        public override void OnStateEnter(BaseRangedEmemy _ememy)
+        {
+            base.OnStateEnter(_ememy);
+            Enemy.rb.linearVelocity = Vector3.zero;
+        }
+
         public override void OnStateUpdate()
         {
             playerCheck();
@@ -19,10 +25,10 @@ namespace Script.Enemy.State.Idle
             Vector3 toPlayer = player.transform.position - Enemy.transform.position;
             bool seePLayer = Physics.Raycast(Enemy.transform.position, toPlayer, playerDist + 5f, GlobalReference.Instance.playerLayer);
 
+            
             if (seePLayer)
             {
-                StateFactory factory = new StateFactory();
-                Enemy.ChangeState(factory.CreateState(EnemyStatesEnum.Aggro));
+                Enemy.ChangeState(StateFactory.Instance.CreateState(EnemyStatesEnum.Aggro));
             }
         }
     }

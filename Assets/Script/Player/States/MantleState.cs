@@ -11,7 +11,7 @@ public class MantleState : PlayerState
 
         manager.predictionPoint.gameObject.SetActive(false);
 
-        manager.transform.DOMove(manager.RUD.MantlePoint, 0.5f);
+        manager.transform.DOMove(manager.RUD.MantlePoint, 0.3f);
     }
 
     public override void OnStateExit()
@@ -27,6 +27,6 @@ public class MantleState : PlayerState
     public override void OnStateUpdate()
     {
         base.OnStateUpdate();
-        manager.WaitToChangeState(manager.BaseState, 0.5f, stateEnterTime);
+        manager.WaitToChangeState(manager.BaseState, 0.3f, stateEnterTime);
     }
 }

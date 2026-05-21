@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Drone
   m_EditorClassIdentifier: Assembly-CSharp::Script.Enemy.EnemiesStats.EnemyStatSO
   DetectionRange: 50
-  Acceleration: 5
-  MaxSpeed: 20
+  MoveSpeed: 13
+  AttackFrequentcy: 5

@@ -69,7 +69,8 @@ public class PlayerStateManager : MonoBehaviour
     public PlayerState ThrowGrappleState = new ThrowGrappleState();
     public PlayerState pullRopeBackState = new PullBackRopeState();
     public PlayerState SwingState = new SwingState();
-    public PlayerState ReelState = new GrapplePullState();
+    public PlayerState GrapplePullState = new GrapplePullState();
+    public PlayerState GrapplePullinState = new GrapplePullintoState();
     public PlayerState GrappleLeapState = new GrappleLeapState();
     public PlayerState WallRunState = new WallRunningState();
     public PlayerState MantleState = new MantleState();
@@ -106,51 +107,113 @@ public class PlayerStateManager : MonoBehaviour
     {
         CurrentState.OnStateTriggerEnter(other);
     }
+    public float minAimAssistRadius = 0.5f; 
+    public float maxAimAssistRadius = 4.0f; 
+    
     public RaycastHit GrapplePrediction()
     {
-        LayerMask AssisiPriority = HeavyPull | Pullable;
-        
-        Vector3 startSpherecasPos = Cam.transform.position + (Cam.transform.forward * GrappleMaxDistance);
-
-        RaycastHit sphereCastHitOutward;
-        bool sphereHitOutward = Physics.SphereCast(Cam.transform.position, predictionSphereCastRadius, Cam.transform.forward,
-                            out sphereCastHitOutward, GrappleMaxDistance, Swingable | AssisiPriority);
-        
-        RaycastHit sphereCastHitInward;
-        bool sphereHitInward = Physics.SphereCast(startSpherecasPos, predictionSphereCastRadius, -Cam.transform.forward,
-            out sphereCastHitInward, GrappleMaxDistance - 5, Swingable | AssisiPriority);
-
-        RaycastHit raycastHit;
-        bool rayHit = Physics.Raycast(Cam.transform.position, Cam.transform.forward,
-                            out raycastHit, GrappleMaxDistance, Swingable | AssisiPriority);
-
+        LayerMask assistPriority = HeavyPull | Pullable;
+        LayerMask allGrappleMasks = Swingable | assistPriority;
+    
+        // 1. Precise Raycast
+        RaycastHit directHit;
+        bool foundDirect = Physics.Raycast(
+            Cam.transform.position, 
+            Cam.transform.forward, 
+            out directHit, 
+            GrappleMaxDistance, 
+            allGrappleMasks
+        );
+    
+        // 2. Aim Assist (Cast with MAX radius to catch all potential targets)
+        RaycastHit[] hits = Physics.SphereCastAll(
+            Cam.transform.position, 
+            maxAimAssistRadius, 
+            Cam.transform.forward, 
+            GrappleMaxDistance, 
+            allGrappleMasks
+        );
+    
+        RaycastHit bestEnemyHit = new RaycastHit();
+        float bestEnemyScore = -1f;
+        bool foundEnemy = false;
+    
+        RaycastHit bestSwingHit = new RaycastHit();
+        float bestSwingScore = -1f;
+        bool foundSwing = false;
+    
+        foreach (RaycastHit hit in hits)
+        {
+            // --- NEW: CONE FILTERING MATH ---
+            
+            // Find exactly how far ALONG the camera's ray this object is
+            Vector3 localHitPoint = hit.point - Cam.transform.position;
+            float distanceAlongRay = Vector3.Dot(localHitPoint, Cam.transform.forward);
+    
+            // Ignore objects technically behind the camera
+            if (distanceAlongRay < 0) continue; 
+    
+            // Calculate the maximum allowed radius at this specific distance
+            float currentAllowedRadius = Mathf.Lerp(minAimAssistRadius, maxAimAssistRadius, distanceAlongRay / GrappleMaxDistance);
+    
+            // Find the exact dead-center point on the ray at this distance
+            Vector3 pointOnCenterLine = Cam.transform.position + (Cam.transform.forward * distanceAlongRay);
+            
+            // Measure how far the hit point is from the center line
+            float distanceFromCenter = Vector3.Distance(pointOnCenterLine, hit.point);
+    
+            // If the object is outside our dynamic cone, ignore it completely
+            if (distanceFromCenter > currentAllowedRadius)
+                continue;
+    
+            // --- OLD: SCORING LOGIC ---
+    
+            Vector3 directionToHit = localHitPoint.normalized;
+            float alignmentScore = Vector3.Dot(Cam.transform.forward, directionToHit);
+    
+            bool isEnemy = ((1 << hit.collider.gameObject.layer) & assistPriority) != 0;
+    
+            if (isEnemy)
+            {
+                if (!foundEnemy || alignmentScore > bestEnemyScore)
+                {
+                    bestEnemyHit = hit;
+                    bestEnemyScore = alignmentScore;
+                    foundEnemy = true;
+                }
+            }
+            else 
+            {
+                if (!foundSwing || alignmentScore > bestSwingScore)
+                {
+                    bestSwingHit = hit;
+                    bestSwingScore = alignmentScore;
+                    foundSwing = true;
+                }
+            }
+        }
+    
+        // 3. Determine Final Hit (Enemy > Direct Raycast > Swingable)
         RaycastHit finalHit = new RaycastHit();
         bool hasValidHit = false;
-
-        // 2. Logic: If SphereCast hit a "Pullable" object, it takes absolute priority.
-        bool sphereHitOutwardHitEnemy = sphereHitOutward &&
-                                        ((1 << sphereCastHitOutward.collider.gameObject.layer) & AssisiPriority) != 0;
-        bool sphereHitInwardHitEnemy = sphereHitInward &&
-                                       ((1 << sphereCastHitInward.collider.gameObject.layer) & AssisiPriority) != 0;
-        if (sphereHitInwardHitEnemy || sphereHitOutwardHitEnemy)
+    
+        if (foundEnemy)
         {
-            finalHit = sphereCastHitOutward;
+            finalHit = bestEnemyHit;
             hasValidHit = true;
         }
-        // 3. Otherwise, fall back to the precise Raycast if it hit anything.
-        else if (rayHit)
+        else if (foundDirect)
         {
-            finalHit = raycastHit;
+            finalHit = directHit;
             hasValidHit = true;
         }
-        // 4. Last resort: use SphereCast for Swingables if Raycast missed.
-        else if (sphereHitInward)
+        else if (foundSwing)
         {
-            finalHit = sphereCastHitInward;
+            finalHit = bestSwingHit;
             hasValidHit = true;
         }
-
-        // Update Visuals
+    
+        // 4. Update Visuals
         if (hasValidHit)
         {
             predictionPoint.gameObject.SetActive(true);
@@ -160,9 +223,10 @@ public class PlayerStateManager : MonoBehaviour
         {
             predictionPoint.gameObject.SetActive(false);
         }
-
+    
         return finalHit;
     }
+
     public void GuntipPointToGrapple()
     {
         grappleGun.LookAt(RUD.GrapplePoint);
