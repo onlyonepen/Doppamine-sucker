@@ -42,11 +42,6 @@ public class ThrowGrappleState : PlayerState
 
         manager.GuntipPointToGrapple();
 
-        //if (grappleCastHit.collider != null)
-        //{
-        //    manager.RUD.GrapplePoint = grappleCastHit.point;
-        //}
-
         float elapsed = Time.time - stateEnterTime;
         float percent = Mathf.Clamp01(elapsed / manager.GrappleTravelTime);
 
@@ -54,10 +49,6 @@ public class ThrowGrappleState : PlayerState
 
         if (Time.time - stateEnterTime > manager.GrappleTravelTime)
         { 
-            //if(grappleCastHit.collider != null)
-            //{
-            //    manager.RUD.GrappledObject = grappleCastHit.collider.gameObject;
-            //}
             if (!Input.GetMouseButton(1) || grappleCastHit.collider == null)
             {
                 //manager.RUD.GrapplePoint = manager.Guntip.position + manager.Cam.transform.forward * manager.GrappleMaxDistance;
@@ -85,7 +76,16 @@ public class ThrowGrappleState : PlayerState
     {
         Vector3 origin = manager.Guntip.position;
         Vector3 targetGoal = manager.RUD.GrapplePoint;
-        if((1 << manager.RUD.GrappledObject.layer & GlobalReference.Instance.EnemyLayer) != 0) targetGoal = manager.RUD.GrappledObject.transform.position;
+        var grappledObj = manager?.RUD?.GrappledObject;
+        if (grappledObj != null) 
+        {
+            // 3. Explicitly group the bitshift (1 << layer) for better readability
+            if (((1 << grappledObj.layer) & GlobalReference.Instance.EnemyLayer) != 0) 
+            {
+                targetGoal = grappledObj.transform.position;
+            }
+        }
+        else return;
         Vector3 currentTipPos = Vector3.Lerp(origin, targetGoal, percent);
 
         for (int i = 0; i < segmentCount; i++)

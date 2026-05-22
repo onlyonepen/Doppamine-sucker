@@ -3,8 +3,8 @@ using Script.Enemy.State;
 
 public interface IEnemyStateFactory
 {
-    EnemyBaseState CreateIdleState(BaseRangedEmemy enemy);
-    EnemyBaseState CreateAggroState(BaseRangedEmemy enemy);
-    EnemyBaseState CreateAttackState(BaseRangedEmemy enemy);
-    EnemyBaseState CreateGetpullState(BaseRangedEmemy enemy);
+    EnemyBaseState CreateIdleState(BaseEmemy enemy);
+    EnemyBaseState CreateAggroState(BaseEmemy enemy);
+    EnemyBaseState CreateAttackState(BaseEmemy enemy);
+    EnemyBaseState CreateGetpullState(BaseEmemy enemy);
 }

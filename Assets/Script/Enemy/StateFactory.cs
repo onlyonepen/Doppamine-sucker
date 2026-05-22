@@ -12,22 +12,22 @@ namespace Script.Enemy
     
     public class LightDroneFactory : IEnemyStateFactory
     {
-        public EnemyBaseState CreateIdleState(BaseRangedEmemy enemy)
+        public EnemyBaseState CreateIdleState(BaseEmemy enemy)
         {
             return new DroneIdle(enemy);
         }
 
-        public EnemyBaseState CreateAggroState(BaseRangedEmemy enemy)
+        public EnemyBaseState CreateAggroState(BaseEmemy enemy)
         {
             return new DroneAggro(enemy);
         }
 
-        public EnemyBaseState CreateAttackState(BaseRangedEmemy enemy)
+        public EnemyBaseState CreateAttackState(BaseEmemy enemy)
         {
             return new DroneAttack(enemy);
         }
 
-        public EnemyBaseState CreateGetpullState(BaseRangedEmemy enemy)
+        public EnemyBaseState CreateGetpullState(BaseEmemy enemy)
         {
             return new DroneGetPull(enemy);
         }
@@ -35,22 +35,22 @@ namespace Script.Enemy
 
     public class HeavyDroneFactory : IEnemyStateFactory
     {
-        public EnemyBaseState CreateIdleState(BaseRangedEmemy enemy)
+        public EnemyBaseState CreateIdleState(BaseEmemy enemy)
         {
             return new DroneIdle(enemy);
         }
 
-        public EnemyBaseState CreateAggroState(BaseRangedEmemy enemy)
+        public EnemyBaseState CreateAggroState(BaseEmemy enemy)
         {
             return new DroneAggro(enemy);
         }
 
-        public EnemyBaseState CreateAttackState(BaseRangedEmemy enemy)
+        public EnemyBaseState CreateAttackState(BaseEmemy enemy)
         {
             return new DroneSpreadShot(enemy);
         }
 
-        public EnemyBaseState CreateGetpullState(BaseRangedEmemy enemy)
+        public EnemyBaseState CreateGetpullState(BaseEmemy enemy)
         {
             return new DroneGetPull(enemy);
         }

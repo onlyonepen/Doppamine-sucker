@@ -107,25 +107,28 @@ public class PlayerStateManager : MonoBehaviour
     {
         CurrentState.OnStateTriggerEnter(other);
     }
-    public float minAimAssistRadius = 0.5f; 
-    public float maxAimAssistRadius = 4.0f; 
-    
+    public float minAimAssistRadius = 0.8f; 
+    public float maxAimAssistRadius = 5.0f; 
+
     public RaycastHit GrapplePrediction()
     {
         LayerMask assistPriority = HeavyPull | Pullable;
         LayerMask allGrappleMasks = Swingable | assistPriority;
     
-        // 1. Precise Raycast
-        RaycastHit directHit;
-        bool foundDirect = Physics.Raycast(
-            Cam.transform.position, 
-            Cam.transform.forward, 
-            out directHit, 
-            GrappleMaxDistance, 
-            allGrappleMasks
-        );
+        LayerMask obstacleMask = GlobalReference.Instance.TerrainLayer; 
     
-        // 2. Aim Assist (Cast with MAX radius to catch all potential targets)
+        RaycastHit directHit = new RaycastHit();
+        bool foundDirect = false;
+    
+        if (Physics.Raycast(Cam.transform.position, Cam.transform.forward, out RaycastHit tempDirect, GrappleMaxDistance, allGrappleMasks | obstacleMask))
+        {
+            if (((1 << tempDirect.collider.gameObject.layer) & allGrappleMasks) != 0)
+            {
+                directHit = tempDirect;
+                foundDirect = true;
+            }
+        }
+    
         RaycastHit[] hits = Physics.SphereCastAll(
             Cam.transform.position, 
             maxAimAssistRadius, 
@@ -144,29 +147,24 @@ public class PlayerStateManager : MonoBehaviour
     
         foreach (RaycastHit hit in hits)
         {
-            // --- NEW: CONE FILTERING MATH ---
-            
-            // Find exactly how far ALONG the camera's ray this object is
             Vector3 localHitPoint = hit.point - Cam.transform.position;
             float distanceAlongRay = Vector3.Dot(localHitPoint, Cam.transform.forward);
     
-            // Ignore objects technically behind the camera
             if (distanceAlongRay < 0) continue; 
     
-            // Calculate the maximum allowed radius at this specific distance
             float currentAllowedRadius = Mathf.Lerp(minAimAssistRadius, maxAimAssistRadius, distanceAlongRay / GrappleMaxDistance);
     
-            // Find the exact dead-center point on the ray at this distance
             Vector3 pointOnCenterLine = Cam.transform.position + (Cam.transform.forward * distanceAlongRay);
             
-            // Measure how far the hit point is from the center line
             float distanceFromCenter = Vector3.Distance(pointOnCenterLine, hit.point);
     
-            // If the object is outside our dynamic cone, ignore it completely
             if (distanceFromCenter > currentAllowedRadius)
                 continue;
     
-            // --- OLD: SCORING LOGIC ---
+            if (Physics.Linecast(Cam.transform.position, hit.point, obstacleMask))
+            {
+                continue; 
+            }
     
             Vector3 directionToHit = localHitPoint.normalized;
             float alignmentScore = Vector3.Dot(Cam.transform.forward, directionToHit);
@@ -193,7 +191,6 @@ public class PlayerStateManager : MonoBehaviour
             }
         }
     
-        // 3. Determine Final Hit (Enemy > Direct Raycast > Swingable)
         RaycastHit finalHit = new RaycastHit();
         bool hasValidHit = false;
     
@@ -213,7 +210,6 @@ public class PlayerStateManager : MonoBehaviour
             hasValidHit = true;
         }
     
-        // 4. Update Visuals
         if (hasValidHit)
         {
             predictionPoint.gameObject.SetActive(true);

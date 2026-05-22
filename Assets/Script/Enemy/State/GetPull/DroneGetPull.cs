@@ -2,7 +2,7 @@
 {
     public class DroneGetPull : EnemyBaseState
     {
-        public DroneGetPull(BaseRangedEmemy enemy)
+        public DroneGetPull(BaseEmemy enemy)
         {
             Enemy = enemy;
         }

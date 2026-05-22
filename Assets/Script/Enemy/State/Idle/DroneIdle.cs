@@ -4,7 +4,10 @@ namespace Script.Enemy.State.Idle
 {
     public class DroneIdle : EnemyBaseState
     {
-        public DroneIdle(BaseRangedEmemy enemy)
+        private float detectionValue;
+        private float toAggroTime = 3f;
+        
+        public DroneIdle(BaseEmemy enemy)
         {
             Enemy = enemy;
         }
@@ -13,11 +16,18 @@ namespace Script.Enemy.State.Idle
         {
             base.OnStateEnter();
             Enemy.rb.linearVelocity = Vector3.zero;
+            Enemy.rb.constraints =  RigidbodyConstraints.FreezePosition;
         }
 
         public override void OnStateUpdate()
         {
             playerCheck();
+        }
+
+        public override void OnStateExit()
+        {
+            Enemy.rb.constraints =  RigidbodyConstraints.None;
+            Enemy.rb.constraints =  RigidbodyConstraints.FreezeRotation;
         }
 
         private void playerCheck()
@@ -31,10 +41,10 @@ namespace Script.Enemy.State.Idle
             bool seePLayer = Physics.Raycast(Enemy.transform.position, toPlayer, playerDist + 5f, GlobalReference.Instance.playerLayer);
 
             
-            if (seePLayer)
-            {
-                Enemy.ChangeState(Enemy.stateFactory.CreateAggroState(Enemy));
-            }
+            if (seePLayer) detectionValue += Time.deltaTime;
+            else detectionValue -= Time.deltaTime;
+            
+            if (seePLayer && (detectionValue > toAggroTime) || playerDist < 15) Enemy.ChangeState(Enemy.stateFactory.CreateAggroState(Enemy));
         }
     }
 }

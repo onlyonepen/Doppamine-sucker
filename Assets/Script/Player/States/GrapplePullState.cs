@@ -14,7 +14,7 @@ public class GrapplePullState : PlayerState
     Vector3 initialObjPos;
 
     bool grappleEnemy = false;
-    private BaseRangedEmemy enemy;
+    private BaseEmemy enemy;
 
     private Vector3 initialVelocity;
     
@@ -25,7 +25,7 @@ public class GrapplePullState : PlayerState
         grappledObj = manager.RUD.GrappledObject;
         initialObjPos = grappledObj.transform.position;
 
-        if (grappledObj.TryGetComponent<BaseRangedEmemy>( out var component))
+        if (grappledObj.TryGetComponent<BaseEmemy>( out var component))
         {
             component.GetPull();
             grappleEnemy = true;

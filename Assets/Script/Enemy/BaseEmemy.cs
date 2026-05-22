@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Script.Enemy
 {
-    public class BaseRangedEmemy : MonoBehaviour, IDamagable
+    public class BaseEmemy : MonoBehaviour, IDamagable
     {
         public EnemyType Type;
         [SerializeField] internal EnemyStatSO Stat;
@@ -13,6 +13,7 @@ namespace Script.Enemy
         [SerializeField] private ParticleSystem DeathParticles;
         [SerializeField] internal Transform Guntip;
         [SerializeField] internal GameObject ProjectilePrefab;
+        [SerializeField] internal ParticleSystem ChargeUpParticles;
 
         public IEnemyStateFactory stateFactory { get; private set; }
         private EnemyBaseState currentState;
@@ -28,7 +29,6 @@ namespace Script.Enemy
         {
             currentState.OnStateExit();
             currentState = nextState;
-            Debug.Log("current state is " + currentState);
             currentState.OnStateEnter();
         }
 
