@@ -10,6 +10,11 @@ namespace Script.Enemy.State.Aggro
         // Adjust these depending on your drone's physical size
         private float droneRadius = 0.5f; 
         private float collisionCheckDistance = 2.5f; 
+        
+        public DroneAggro(BaseRangedEmemy enemy)
+        {
+            Enemy = enemy;
+        }
 
         public override void OnStateUpdate()
         {
@@ -26,10 +31,10 @@ namespace Script.Enemy.State.Aggro
             
             bool seePLayer = Physics.Raycast(Enemy.transform.position, toPlayer.normalized, playerDist + 5f, GlobalReference.Instance.playerLayer);
 
-            if(Time.time - StateEnterTime > Enemy.Stat.AttackFrequentcy) Enemy.ChangeState(StateFactory.Instance.CreateState(EnemyStatesEnum.Attack));
+            if(Time.time - StateEnterTime > Enemy.Stat.AttackFrequentcy) Enemy.ChangeState(Enemy.stateFactory.CreateAttackState(Enemy));
             if (!seePLayer || playerDist > Enemy.Stat.DetectionRange)
             {
-                Enemy.ChangeState(StateFactory.Instance.CreateState(EnemyStatesEnum.Idle));
+                Enemy.ChangeState(Enemy.stateFactory.CreateIdleState(Enemy));
             }
         }
 

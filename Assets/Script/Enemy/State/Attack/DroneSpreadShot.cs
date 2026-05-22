@@ -8,10 +8,15 @@ namespace Script.Enemy.State.Attack
         
         private float Anticipation = 0.5f;
         private float Recovery = 0.5f;
-
-        public override void OnStateEnter(BaseRangedEmemy _ememy)
+        
+        public DroneSpreadShot(BaseRangedEmemy enemy)
         {
-            base.OnStateEnter(_ememy);
+            Enemy = enemy;
+        }
+
+        public override void OnStateEnter()
+        {
+            base.OnStateEnter();
             shoted = false;
         }
 
@@ -24,7 +29,7 @@ namespace Script.Enemy.State.Attack
                 shootProjectile();
             }
 
-            if(Time.time - StateEnterTime > Anticipation + Recovery) Enemy.ChangeState(StateFactory.Instance.CreateState(EnemyStatesEnum.Aggro));
+            if(Time.time - StateEnterTime > Anticipation + Recovery) Enemy.ChangeState(Enemy.stateFactory.CreateAggroState(Enemy));
         }
 
         private void shootProjectile()

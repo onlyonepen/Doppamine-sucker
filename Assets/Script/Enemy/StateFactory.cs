@@ -8,43 +8,51 @@ using UnityEngine;
 
 namespace Script.Enemy
 {
-    public enum EnemyStatesEnum
+    public enum EnemyType { LightDrone, HeavyDrone }
+    
+    public class LightDroneFactory : IEnemyStateFactory
     {
-        Idle,
-        Aggro,
-        Attack,
-        GetPull
+        public EnemyBaseState CreateIdleState(BaseRangedEmemy enemy)
+        {
+            return new DroneIdle(enemy);
+        }
+
+        public EnemyBaseState CreateAggroState(BaseRangedEmemy enemy)
+        {
+            return new DroneAggro(enemy);
+        }
+
+        public EnemyBaseState CreateAttackState(BaseRangedEmemy enemy)
+        {
+            return new DroneAttack(enemy);
+        }
+
+        public EnemyBaseState CreateGetpullState(BaseRangedEmemy enemy)
+        {
+            return new DroneGetPull(enemy);
+        }
     }
 
-    public class StateFactory : MonoBehaviour
+    public class HeavyDroneFactory : IEnemyStateFactory
     {
-        public static StateFactory Instance { get; private set; }
-        private void Awake()
+        public EnemyBaseState CreateIdleState(BaseRangedEmemy enemy)
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(this);
-            }
-            else
-            {
-                Instance = this;
-            }
-        } 
-        public EnemyBaseState CreateState(EnemyStatesEnum enemyStateEnum)
+            return new DroneIdle(enemy);
+        }
+
+        public EnemyBaseState CreateAggroState(BaseRangedEmemy enemy)
         {
-            switch (enemyStateEnum)
-            {
-                case EnemyStatesEnum.Idle:
-                    return new DroneIdle();
-                case EnemyStatesEnum.Aggro:
-                    return new DroneAggro();
-                case EnemyStatesEnum.GetPull :
-                    return new DroneGetPull();
-                case EnemyStatesEnum.Attack:
-                    return new DroneAttack();
-;                default:
-                    throw new NotImplementedException("CUM");
-            }
+            return new DroneAggro(enemy);
+        }
+
+        public EnemyBaseState CreateAttackState(BaseRangedEmemy enemy)
+        {
+            return new DroneSpreadShot(enemy);
+        }
+
+        public EnemyBaseState CreateGetpullState(BaseRangedEmemy enemy)
+        {
+            return new DroneGetPull(enemy);
         }
     }
 }

@@ -7,18 +7,21 @@ namespace Script.Enemy
 {
     public class BaseRangedEmemy : MonoBehaviour, IDamagable
     {
+        public EnemyType Type;
         [SerializeField] internal EnemyStatSO Stat;
-        [SerializeField] private EnemyStatesEnum StarterState;
         [SerializeField] internal Rigidbody rb;
         [SerializeField] private ParticleSystem DeathParticles;
         [SerializeField] internal Transform Guntip;
         [SerializeField] internal GameObject ProjectilePrefab;
-        private EnemyBaseState currentState;
 
+        public IEnemyStateFactory stateFactory { get; private set; }
+        private EnemyBaseState currentState;
+        
         private void Start()
         {
-            currentState = StateFactory.Instance.CreateState(StarterState);
-            currentState.OnStateEnter(this);
+            stateFactory = CreateFactory(Type);
+            currentState = stateFactory.CreateIdleState(this);
+            currentState.OnStateEnter();
         }
 
         public void ChangeState(EnemyBaseState nextState)
@@ -26,7 +29,7 @@ namespace Script.Enemy
             currentState.OnStateExit();
             currentState = nextState;
             Debug.Log("current state is " + currentState);
-            currentState.OnStateEnter(this);
+            currentState.OnStateEnter();
         }
 
         private void Update()
@@ -36,7 +39,7 @@ namespace Script.Enemy
 
         public void GetPull()
         {
-            ChangeState(StateFactory.Instance.CreateState(EnemyStatesEnum.GetPull));
+            ChangeState(stateFactory.CreateGetpullState(this));
         }
         
         public void TakeDamage()
@@ -46,6 +49,19 @@ namespace Script.Enemy
             gameObject.SetActive(false);
             DeathParticles.transform.parent = null;
             DeathParticles.Play();
+        }
+
+        private IEnemyStateFactory CreateFactory(EnemyType type)
+        {
+            switch (type)
+            {
+                case EnemyType.LightDrone:
+                    return new LightDroneFactory();
+                case EnemyType.HeavyDrone:
+                    return new HeavyDroneFactory();
+                default:
+                    throw new NotImplementedException("Not implemented for " + type);
+            }
         }
     }
 }

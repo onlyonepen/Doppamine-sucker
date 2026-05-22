@@ -663,7 +663,7 @@ RectTransform:
   m_Children:
   - {fileID: 954158514}
   - {fileID: 1437417158}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 2102409992}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -679,7 +679,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 281644728}
-  - component: {fileID: 281644729}
   m_Layer: 0
   m_Name: Enemies
   m_TagString: Untagged
@@ -704,18 +703,6 @@ Transform:
   - {fileID: 418401444}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &281644729
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 281644727}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 834d284b0ae54a1a9786510ea436a422, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Script.Enemy.StateFactory
 --- !u!4 &282100835 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1477117332468728832, guid: 17a644e65c3424075b64ae978ef8b2ad, type: 3}
@@ -1139,8 +1126,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f354eb3c947844d4a67bfa6e42946c03, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Script.Enemy.BaseEmemy
+  Type: 1
   Stat: {fileID: 11400000, guid: c0f0367a6a0da834d87bbd7b92caec50, type: 2}
-  StarterState: 0
   rb: {fileID: 418401445}
   DeathParticles: {fileID: 1742334330}
   Guntip: {fileID: 1221288418}
@@ -1442,8 +1429,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f354eb3c947844d4a67bfa6e42946c03, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Script.Enemy.BaseEmemy
+  Type: 0
   Stat: {fileID: 11400000, guid: c0f0367a6a0da834d87bbd7b92caec50, type: 2}
-  StarterState: 0
   rb: {fileID: 479818225}
   DeathParticles: {fileID: 1172243349}
   Guntip: {fileID: 661117013}
@@ -13846,6 +13833,7 @@ Transform:
   - {fileID: 1754854030}
   - {fileID: 282100835}
   - {fileID: 1131432393}
+  - {fileID: 220959172}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &914077294101784373
@@ -14000,5 +13988,4 @@ SceneRoots:
   - {fileID: 914077294101784373}
   - {fileID: 281644728}
   - {fileID: 2102409992}
-  - {fileID: 220959172}
   - {fileID: 1128540676}

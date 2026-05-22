@@ -7,10 +7,10 @@ namespace Script.Enemy.State
     {
         protected BaseRangedEmemy Enemy;
         protected float StateEnterTime;
+        
 
-        public virtual void OnStateEnter(BaseRangedEmemy _ememy)
+        public virtual void OnStateEnter()
         {
-            Enemy = _ememy;
             StateEnterTime = Time.time;
         }
         public virtual void OnStateUpdate() {  }

@@ -4,9 +4,14 @@ namespace Script.Enemy.State.Idle
 {
     public class DroneIdle : EnemyBaseState
     {
-        public override void OnStateEnter(BaseRangedEmemy _ememy)
+        public DroneIdle(BaseRangedEmemy enemy)
         {
-            base.OnStateEnter(_ememy);
+            Enemy = enemy;
+        }
+        
+        public override void OnStateEnter()
+        {
+            base.OnStateEnter();
             Enemy.rb.linearVelocity = Vector3.zero;
         }
 
@@ -28,7 +33,7 @@ namespace Script.Enemy.State.Idle
             
             if (seePLayer)
             {
-                Enemy.ChangeState(StateFactory.Instance.CreateState(EnemyStatesEnum.Aggro));
+                Enemy.ChangeState(Enemy.stateFactory.CreateAggroState(Enemy));
             }
         }
     }
