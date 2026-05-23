@@ -39,7 +39,7 @@ namespace Script.Enemy
 
         public void GetPull()
         {
-            ChangeState(stateFactory.CreateGetpullState(this));
+            ChangeState(stateFactory.CreateStaggerState(this));
         }
         
         public void TakeDamage()
@@ -63,5 +63,9 @@ namespace Script.Enemy
                     throw new NotImplementedException("Not implemented for " + type);
             }
         }
+        //internal float CalculateTiltAngle()
+        //{
+        //    return Mathf.Clamp(-rb.angularVelocity.magnitude * 30 / Stat.MoveSpeed, -30, 30);
+        //}
     }
 }

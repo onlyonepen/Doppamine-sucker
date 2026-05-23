@@ -45,9 +45,15 @@ namespace Script.Enemy.State.Attack
             Quaternion leftRotation = Quaternion.AngleAxis(-randomSpreadAngle, randomSpreadAxis) * centerRotation;
             Quaternion rightRotation = Quaternion.AngleAxis(randomSpreadAngle, randomSpreadAxis) * centerRotation;
 
-            GameObject.Instantiate(Enemy.ProjectilePrefab, Enemy.Guntip.position, centerRotation);
-            GameObject.Instantiate(Enemy.ProjectilePrefab, Enemy.Guntip.position, leftRotation);
-            GameObject.Instantiate(Enemy.ProjectilePrefab, Enemy.Guntip.position, rightRotation);
+            summonProjectile(centerRotation);
+            summonProjectile(leftRotation);
+            summonProjectile(rightRotation);
+        }
+
+        private void summonProjectile(Quaternion Spawnrotation)
+        {
+            GameObject bullet = GameObject.Instantiate(Enemy.ProjectilePrefab, Enemy.Guntip.position, Spawnrotation);
+            bullet.GetComponent<BasicEnemyProjectile>().ProjectileOwner = Enemy;
         }
     }
     

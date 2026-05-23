@@ -1,8 +1,8 @@
 ﻿namespace Script.Enemy.State.GetPull
 {
-    public class DroneGetPull : EnemyBaseState
+    public class DroneStagger : EnemyBaseState
     {
-        public DroneGetPull(BaseEmemy enemy)
+        public DroneStagger(BaseEmemy enemy)
         {
             Enemy = enemy;
         }

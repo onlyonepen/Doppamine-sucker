@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Script.Enemy;
 using UnityEngine;
 
 public class PlayerAttacking : MonoBehaviour
@@ -49,19 +50,34 @@ public class PlayerAttacking : MonoBehaviour
 
     public void Attack1()
     {
-        HashSet<IDamagable> hitTargets = new();
+        if (attackArea == null || attackArea.InArea == null) return;
 
+        HashSet<IDamagable> hitTargets = new();
+    
+        int parriableLayer = LayerMask.NameToLayer("Parriable");
+        
         foreach (GameObject obj in attackArea.InArea)
         {
-            // Use GetComponentInParent to look up the hierarchy if needed
-            var damagable = obj.GetComponentInParent<IDamagable>();
-        
-            if (damagable != null)
+            if (obj == null) continue;
+
+            if (((1 << obj.layer) & GlobalReference.Instance.EnemyLayer) != 0)
             {
-                if (hitTargets.Add(damagable))
+                var damagable = obj.GetComponentInParent<IDamagable>();
+    
+                if (damagable != null && hitTargets.Add(damagable))
                 {
-                    // Don't forget to pass your 'dmg' variable here if your interface supports it!
                     damagable.TakeDamage(); 
+                }
+            }
+            else if (obj.layer == parriableLayer)
+            {
+                if (obj.TryGetComponent(out IParriable parriable))
+                {
+                    parriable.Parried();
+                }
+                else 
+                {
+                    Debug.LogWarning($"Object '{obj.name}' is on the Parriable layer but missing the IParriable component.");
                 }
             }
         }

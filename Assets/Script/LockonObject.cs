@@ -18,34 +18,27 @@ public class LockonObject : MonoBehaviour
 
     void Start()
     {
-        if(target == null) Debug.LogError("No Target");
+        if(target == null) target = GlobalReference.Instance.player.transform;
     }
 
     void LateUpdate()
     {
-        // Don't do anything if we don't have a target
         if (target == null) return;
 
-        // Calculate the direction from this object to the target
         Vector3 direction = target.position - transform.position;
 
-        // Prevent Unity from throwing a warning if the objects are in the exact same spot
         if (direction != Vector3.zero)
         {
-            // Calculate what the rotation SHOULD be to look directly at the target
             Quaternion desiredRotation = Quaternion.LookRotation(direction);
             Vector3 desiredEuler = desiredRotation.eulerAngles;
 
-            // Get our current rotation so we can keep the locked values
             Vector3 currentEuler = transform.eulerAngles;
 
-            // Decide which axes to use based on the lock toggles
-            float finalX = lockX ? currentEuler.x : desiredEuler.x;
-            float finalY = lockY ? currentEuler.y : desiredEuler.y;
-            float finalZ = lockZ ? currentEuler.z : desiredEuler.z;
+            float finalX = lockX ? 0 : desiredEuler.x;
+            float finalY = lockY ? 0 : desiredEuler.y;
+            float finalZ = lockZ ? 0 : desiredEuler.z;
 
-            // Apply the final rotation
-            transform.eulerAngles = new Vector3(finalX, finalY, finalZ);
+            transform.localEulerAngles = new Vector3(finalX, finalY, finalZ);
         }
     }
 }

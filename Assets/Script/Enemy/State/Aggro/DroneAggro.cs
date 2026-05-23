@@ -11,8 +11,10 @@ namespace Script.Enemy.State.Aggro
         private float droneRadius = 0.5f; 
         private float collisionCheckDistance = 2.5f;
 
-        private float AggroMax = 2;
+        private float AggroMax = 5;
         private float AggroTimer;
+
+        private float NextAttackTime;
         
         public DroneAggro(BaseEmemy enemy)
         {
@@ -23,6 +25,7 @@ namespace Script.Enemy.State.Aggro
         {
             base.OnStateEnter();
             AggroTimer = AggroMax;
+            NextAttackTime = Enemy.Stat.AttackFrequentcy + Random.Range(-1f, 1f);
         }
 
         public override void OnStateUpdate()
@@ -50,7 +53,7 @@ namespace Script.Enemy.State.Aggro
             Physics.Raycast(Enemy.transform.position, toPlayer.normalized,out hit, playerDist + 5f, playerAndTerrain);
             bool seePLayer = hit.collider.gameObject.layer == player.layer;
             
-            if(Time.time - StateEnterTime > Enemy.Stat.AttackFrequentcy) Enemy.ChangeState(Enemy.stateFactory.CreateAttackState(Enemy));
+            if(Time.time - StateEnterTime > NextAttackTime) Enemy.ChangeState(Enemy.stateFactory.CreateAttackState(Enemy));
             if (!seePLayer || playerDist > Enemy.Stat.DetectionRange)
             {
                 AggroTimer -= Time.deltaTime;
@@ -94,7 +97,8 @@ namespace Script.Enemy.State.Aggro
                 }
             }
         
-            float targetDistance = Enemy.Stat.DetectionRange * 0.6f;
+            float displaceRand =  Random.Range(0.4f, 0.8f);
+            float targetDistance = Enemy.Stat.DetectionRange * displaceRand;
             Vector3 horizontalToPlayer = new Vector3(trueToPlayer.x, 0, trueToPlayer.z);
             float horizontalDist = horizontalToPlayer.magnitude;
             Vector3 horizontalDirToPlayer = horizontalToPlayer.normalized;

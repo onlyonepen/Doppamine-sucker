@@ -41,12 +41,14 @@ namespace Script.Enemy.State.Attack
         {
             Enemy.rb.constraints =  RigidbodyConstraints.None;
             Enemy.rb.constraints =  RigidbodyConstraints.FreezeRotation;
+            Enemy.ChargeUpParticles.Stop();
         }
 
         private void shootProjectile()
         {
             Enemy.Guntip.LookAt(GlobalReference.Instance.player.transform.position);
-            GameObject.Instantiate(Enemy.ProjectilePrefab, Enemy.Guntip.position, Enemy.Guntip.rotation);
+            GameObject bullet = GameObject.Instantiate(Enemy.ProjectilePrefab, Enemy.Guntip.position, Enemy.Guntip.rotation);
+            bullet.GetComponent<BasicEnemyProjectile>().ProjectileOwner = Enemy;
             Enemy.ChargeUpParticles.Stop();
         }
 

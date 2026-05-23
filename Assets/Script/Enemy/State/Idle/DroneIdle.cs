@@ -5,7 +5,7 @@ namespace Script.Enemy.State.Idle
     public class DroneIdle : EnemyBaseState
     {
         private float detectionValue;
-        private float toAggroTime = 3f;
+        private float toAggroTime = 1f;
         
         public DroneIdle(BaseEmemy enemy)
         {

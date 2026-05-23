@@ -27,9 +27,9 @@ namespace Script.Enemy
             return new DroneAttack(enemy);
         }
 
-        public EnemyBaseState CreateGetpullState(BaseEmemy enemy)
+        public EnemyBaseState CreateStaggerState(BaseEmemy enemy)
         {
-            return new DroneGetPull(enemy);
+            return new DroneStagger(enemy);
         }
     }
 
@@ -50,9 +50,9 @@ namespace Script.Enemy
             return new DroneSpreadShot(enemy);
         }
 
-        public EnemyBaseState CreateGetpullState(BaseEmemy enemy)
+        public EnemyBaseState CreateStaggerState(BaseEmemy enemy)
         {
-            return new DroneGetPull(enemy);
+            return new DroneStagger(enemy);
         }
     }
 }

@@ -1,11 +1,16 @@
 ﻿using System;
+using DG.Tweening;
+using Script.Enemy;
 using UnityEngine;
 
-public class BasicEnemyProjectile : MonoBehaviour
+public class BasicEnemyProjectile : MonoBehaviour , IParriable
 {
         public float speed = 50f;
         public float lifetime = 10f;
         private float spawnTimeStamp;
+
+        [HideInInspector]public BaseEmemy ProjectileOwner;
+        private bool parried = false;
         
         private void OnEnable()
         {
@@ -14,19 +19,40 @@ public class BasicEnemyProjectile : MonoBehaviour
 
         private void Update()
         {
-                transform.position += transform.forward * speed * Time.deltaTime;
-                if (Time.time - spawnTimeStamp > lifetime)
+                if (!parried)
                 {
-                        Destroy(gameObject);
+                        transform.position += transform.forward * speed * Time.deltaTime;
+                        if (Time.time - spawnTimeStamp > lifetime)
+                        {
+                                Destroy(gameObject);
+                        }
                 }
         }
 
         private void OnCollisionEnter(Collision collision)
         {
-                //LayerMask todestroyLayer = GlobalReference.Instance.playerLayer | GlobalReference.Instance.TerrainLayer;
-                //if((1 << collision.gameObject.layer & todestroyLayer) != 0) Destroy(gameObject);
-                bool hitPlayer = (1 << collision.gameObject.layer & GlobalReference.Instance.playerLayer) != 0;
-                bool hitTerrain = (1 << collision.gameObject.layer & GlobalReference.Instance.TerrainLayer) != 0;
-                if(hitPlayer || hitTerrain) Destroy(gameObject);
+                if(!parried)
+                {
+                        bool hitPlayer = (1 << collision.gameObject.layer & GlobalReference.Instance.playerLayer) != 0;
+                        bool hitTerrain = (1 << collision.gameObject.layer & GlobalReference.Instance.TerrainLayer) != 0;
+                        if(hitPlayer || hitTerrain) Destroy(gameObject);       
+                }
+        }
+
+        public void Parried()
+        {
+                parried = true;
+                ProjectileOwner.ChangeState(ProjectileOwner.stateFactory.CreateStaggerState(ProjectileOwner));
+                float ownerDistance = Vector3.Distance(transform.position, ProjectileOwner.transform.position);
+
+                float DiedDelay = 0.1f;
+                transform.DOMove(ProjectileOwner.transform.position, DiedDelay).SetEase(Ease.Linear);
+                Invoke("KillOwner", DiedDelay);
+        }
+
+        private void KillOwner()
+        {
+                ProjectileOwner.TakeDamage();
+                Destroy(gameObject);
         }
 }
