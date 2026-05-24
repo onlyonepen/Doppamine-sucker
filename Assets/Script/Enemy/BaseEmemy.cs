@@ -2,6 +2,7 @@
 using Script.Enemy.EnemiesStats;
 using Script.Enemy.State;
 using UnityEngine;
+using VInspector;
 
 namespace Script.Enemy
 {
@@ -63,9 +64,13 @@ namespace Script.Enemy
                     throw new NotImplementedException("Not implemented for " + type);
             }
         }
-        //internal float CalculateTiltAngle()
-        //{
-        //    return Mathf.Clamp(-rb.angularVelocity.magnitude * 30 / Stat.MoveSpeed, -30, 30);
-        //}
+
+        internal float staggerTime;
+        [Button]
+        public void Stagger(float time = 120)
+        {
+            staggerTime = time;
+            ChangeState(stateFactory.CreateStaggerState(this));
+        }
     }
 }

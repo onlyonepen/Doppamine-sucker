@@ -50,8 +50,9 @@ namespace Script.Enemy.State.Aggro
 
             RaycastHit hit;
             LayerMask playerAndTerrain = GlobalReference.Instance.playerLayer | GlobalReference.Instance.TerrainLayer;
-            Physics.Raycast(Enemy.transform.position, toPlayer.normalized,out hit, playerDist + 5f, playerAndTerrain);
-            bool seePLayer = hit.collider.gameObject.layer == player.layer;
+            bool casthit = Physics.Raycast(Enemy.transform.position, toPlayer.normalized,out hit, playerDist + 5f, playerAndTerrain);
+            //bool seePLayer = hit.collider.gameObject.layer == player.layer;
+            bool seePLayer = casthit && (1 << hit.collider.gameObject.layer & GlobalReference.Instance.playerLayer) != 0;
             
             if(Time.time - StateEnterTime > NextAttackTime) Enemy.ChangeState(Enemy.stateFactory.CreateAttackState(Enemy));
             if (!seePLayer || playerDist > Enemy.Stat.DetectionRange)

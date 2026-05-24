@@ -49,16 +49,15 @@ public class ThrowGrappleState : PlayerState
 
         if (Time.time - stateEnterTime > manager.GrappleTravelTime)
         { 
-            if (!Input.GetMouseButton(1) || grappleCastHit.collider == null)
+            if ( grappleCastHit.collider == null)
             {
                 //manager.RUD.GrapplePoint = manager.Guntip.position + manager.Cam.transform.forward * manager.GrappleMaxDistance;
                 manager.ChangeState(manager.pullRopeBackState);
                 return;
             }
 
-            if ((1 << manager.RUD.GrappledObject.layer & manager.Swingable) != 0) { manager.ChangeState(manager.SwingState); }
-            else if ((1 << manager.RUD.GrappledObject.layer & manager.Pullable) != 0) { manager.ChangeState(manager.GrapplePullState); }
-            else if((1 << manager.RUD.GrappledObject.layer & manager.HeavyPull) != 0) { manager.ChangeState(manager.GrapplePullinState); }
+            LayerMask combinedLayer = manager.Swingable | manager.Pullable | manager.HeavyPull;
+            if ((1 << manager.RUD.GrappledObject.layer & combinedLayer) != 0) { manager.ChangeState(manager.SwingState); }
             else manager.ChangeState(manager.pullRopeBackState);
         }
     }
@@ -76,7 +75,7 @@ public class ThrowGrappleState : PlayerState
     {
         Vector3 origin = manager.Guntip.position;
         Vector3 targetGoal = manager.RUD.GrapplePoint;
-        var grappledObj = manager?.RUD?.GrappledObject;
+        var grappledObj = manager.RUD.GrappledObject;
         if (grappledObj != null) 
         {
             // 3. Explicitly group the bitshift (1 << layer) for better readability

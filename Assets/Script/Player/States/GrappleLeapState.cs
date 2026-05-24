@@ -122,6 +122,7 @@ public class GrappleLeapState : PlayerState
         Vector3 origin = manager.Guntip.position;
 
         Vector3 target = manager.RUD.GrapplePoint;
+        if (((1 << manager.RUD.GrappledObject.layer) & GlobalReference.Instance.EnemyLayer) != 0) target = manager.RUD.GrappledObject.transform.position;
 
         manager.GrappleLr.positionCount = segmentCount;
 

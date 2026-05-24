@@ -4,16 +4,21 @@ using VInspector;
 
 public class Spawner : MonoBehaviour
 {
-    [SerializeField] private GameObject enemy;
+    [SerializeField] private GameObject LightDrone;
+    [SerializeField] private GameObject HeavyDrone;
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.G)) SummonEnemy();
+        if (Input.GetKeyDown(KeyCode.L)) SummonLightDrone();
+        if (Input.GetKeyDown(KeyCode.H)) SummonHeavyDrone();
     }
 
-    [Button]
-    public void SummonEnemy()
+    public void SummonLightDrone()
     {
-        Instantiate(enemy);
+        Instantiate(LightDrone);
+    }
+    public void SummonHeavyDrone()
+    {
+        Instantiate(HeavyDrone);
     }
 }

@@ -1,7 +1,17 @@
+using Script.Enemy;
 using UnityEngine;
 
 public class SwingState : PlayerState
 {
+    private enum GrappleItem
+    {
+        Terrain,
+        Light,
+        Heavy
+    }
+
+    private GrappleItem grapple;
+    
     private Vector3 GrapplePoint;
     private SpringJoint joint;
     private float currentDist;
@@ -15,6 +25,10 @@ public class SwingState : PlayerState
     {
         base.OnStateEnter(gamestateManager);
 
+        if ((1 << manager.RUD.GrappledObject.layer & manager.Swingable) != 0) grapple = GrappleItem.Terrain;
+        else if ((1 << manager.RUD.GrappledObject.layer & manager.Pullable) != 0) grapple = GrappleItem.Light;
+        else if ((1 << manager.RUD.GrappledObject.layer & manager.HeavyPull) != 0) grapple = GrappleItem.Heavy;
+        
         manager.PBM.playerCanMove = false;
         SwingDashed = false;
         GrapplePoint = manager.RUD.GrapplePoint;
@@ -37,8 +51,40 @@ public class SwingState : PlayerState
 
         manager.GuntipPointToGrapple();
 
-        if (Input.GetMouseButtonUp(1)) manager.ChangeState(manager.pullRopeBackState);
-        if (Input.GetKeyDown(KeyCode.LeftShift) && manager.UseEnergy(manager.GrappleLeapUsage)) manager.ChangeState(manager.GrappleLeapState);
+
+        if (!Input.GetMouseButton(1))
+        {
+            switch (grapple)
+            {
+                case GrappleItem.Terrain:
+                    manager.ChangeState(manager.pullRopeBackState);
+                    break;
+                case GrappleItem.Light:
+                    manager.ChangeState(manager.GrapplePullState);
+                    break;
+                case GrappleItem.Heavy:
+                    manager.ChangeState(manager.GrapplePullinState);
+                    break;
+            }
+        }
+        
+        if (Input.GetKeyDown(KeyCode.LeftShift) && manager.UseEnergy(manager.GrappleLeapUsage))
+        {
+            manager.ChangeState(manager.GrappleLeapState);
+            if (grapple == GrappleItem.Light)
+            {
+                Vector3 toplayer = manager.transform.position - GrapplePoint;
+                float playerAffectedWeight = 35;
+                manager.RUD.GrappledObject.GetComponent<BaseEmemy>().Stagger(2f);
+                manager.RUD.GrappledObject.GetComponent<Rigidbody>().AddForce(toplayer.normalized * playerAffectedWeight, ForceMode.Impulse);
+            }
+        }
+
+        if (grapple == GrappleItem.Light || grapple == GrappleItem.Heavy)
+        {
+            joint.connectedAnchor = manager.RUD.GrappledObject.transform.position;
+            manager.GrappleLr.SetPosition(1, manager.RUD.GrappledObject.transform.position);
+        }
 
         vertInput = Input.GetAxis("Vertical");
         horiInput = Input.GetAxis("Horizontal");

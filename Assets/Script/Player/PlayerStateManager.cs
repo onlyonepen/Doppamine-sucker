@@ -110,118 +110,146 @@ public class PlayerStateManager : MonoBehaviour
     public float minAimAssistRadius = 0.8f; 
     public float maxAimAssistRadius = 5.0f; 
 
-    public RaycastHit GrapplePrediction()
+public RaycastHit GrapplePrediction()
+{
+    LayerMask assistPriority = HeavyPull | Pullable; // Enemies / Pullables
+    LayerMask allGrappleMasks = Swingable | assistPriority;
+    LayerMask obstacleMask = GlobalReference.Instance.TerrainLayer; 
+
+    // --- 1. DIRECT RAYCAST ---
+    RaycastHit directHitEnemy = new RaycastHit();
+    bool foundDirectEnemy = false;
+    
+    RaycastHit directHitSwing = new RaycastHit();
+    bool foundDirectSwing = false;
+
+    // Check perfectly down the center first
+    if (Physics.Raycast(Cam.transform.position, Cam.transform.forward, out RaycastHit tempDirect, GrappleMaxDistance, allGrappleMasks | obstacleMask))
     {
-        LayerMask assistPriority = HeavyPull | Pullable;
-        LayerMask allGrappleMasks = Swingable | assistPriority;
-    
-        LayerMask obstacleMask = GlobalReference.Instance.TerrainLayer; 
-    
-        RaycastHit directHit = new RaycastHit();
-        bool foundDirect = false;
-    
-        if (Physics.Raycast(Cam.transform.position, Cam.transform.forward, out RaycastHit tempDirect, GrappleMaxDistance, allGrappleMasks | obstacleMask))
+        int hitLayer = 1 << tempDirect.collider.gameObject.layer;
+
+        // Is the direct hit an enemy?
+        if ((hitLayer & assistPriority) != 0)
         {
-            if (((1 << tempDirect.collider.gameObject.layer) & allGrappleMasks) != 0)
-            {
-                directHit = tempDirect;
-                foundDirect = true;
-            }
+            directHitEnemy = tempDirect;
+            foundDirectEnemy = true;
         }
-    
-        RaycastHit[] hits = Physics.SphereCastAll(
-            Cam.transform.position, 
-            maxAimAssistRadius, 
-            Cam.transform.forward, 
-            GrappleMaxDistance, 
-            allGrappleMasks
-        );
-    
-        RaycastHit bestEnemyHit = new RaycastHit();
-        float bestEnemyScore = -1f;
-        bool foundEnemy = false;
-    
-        RaycastHit bestSwingHit = new RaycastHit();
-        float bestSwingScore = -1f;
-        bool foundSwing = false;
-    
-        foreach (RaycastHit hit in hits)
+        // Is the direct hit terrain/swingable?
+        else if ((hitLayer & Swingable) != 0) 
         {
-            Vector3 localHitPoint = hit.point - Cam.transform.position;
-            float distanceAlongRay = Vector3.Dot(localHitPoint, Cam.transform.forward);
-    
-            if (distanceAlongRay < 0) continue; 
-    
-            float currentAllowedRadius = Mathf.Lerp(minAimAssistRadius, maxAimAssistRadius, distanceAlongRay / GrappleMaxDistance);
-    
-            Vector3 pointOnCenterLine = Cam.transform.position + (Cam.transform.forward * distanceAlongRay);
-            
-            float distanceFromCenter = Vector3.Distance(pointOnCenterLine, hit.point);
-    
-            if (distanceFromCenter > currentAllowedRadius)
-                continue;
-    
-            if (Physics.Linecast(Cam.transform.position, hit.point, obstacleMask))
-            {
-                continue; 
-            }
-    
-            Vector3 directionToHit = localHitPoint.normalized;
-            float alignmentScore = Vector3.Dot(Cam.transform.forward, directionToHit);
-    
-            bool isEnemy = ((1 << hit.collider.gameObject.layer) & assistPriority) != 0;
-    
-            if (isEnemy)
-            {
-                if (!foundEnemy || alignmentScore > bestEnemyScore)
-                {
-                    bestEnemyHit = hit;
-                    bestEnemyScore = alignmentScore;
-                    foundEnemy = true;
-                }
-            }
-            else 
-            {
-                if (!foundSwing || alignmentScore > bestSwingScore)
-                {
-                    bestSwingHit = hit;
-                    bestSwingScore = alignmentScore;
-                    foundSwing = true;
-                }
-            }
+            directHitSwing = tempDirect;
+            foundDirectSwing = true;
         }
-    
-        RaycastHit finalHit = new RaycastHit();
-        bool hasValidHit = false;
-    
-        if (foundEnemy)
-        {
-            finalHit = bestEnemyHit;
-            hasValidHit = true;
-        }
-        else if (foundDirect)
-        {
-            finalHit = directHit;
-            hasValidHit = true;
-        }
-        else if (foundSwing)
-        {
-            finalHit = bestSwingHit;
-            hasValidHit = true;
-        }
-    
-        if (hasValidHit)
-        {
-            predictionPoint.gameObject.SetActive(true);
-            predictionPoint.position = finalHit.point;
-        }
-        else
-        {
-            predictionPoint.gameObject.SetActive(false);
-        }
-    
-        return finalHit;
+        // If it hits obstacleMask exclusively, it correctly blocks the raycast 
+        // without setting either to true.
     }
+
+    // --- 2. AIM ASSIST (SPHERECAST) ---
+    RaycastHit[] hits = Physics.SphereCastAll(
+        Cam.transform.position, 
+        maxAimAssistRadius, 
+        Cam.transform.forward, 
+        GrappleMaxDistance, 
+        allGrappleMasks
+    );
+
+    RaycastHit bestAssistEnemyHit = new RaycastHit();
+    float bestEnemyScore = -1f;
+    bool foundAssistEnemy = false;
+
+    RaycastHit bestAssistSwingHit = new RaycastHit();
+    float bestSwingScore = -1f;
+    bool foundAssistSwing = false;
+
+    foreach (RaycastHit hit in hits)
+    {
+        Vector3 localHitPoint = hit.point - Cam.transform.position;
+        float distanceAlongRay = Vector3.Dot(localHitPoint, Cam.transform.forward);
+
+        if (distanceAlongRay < 0) continue; 
+
+        // Dynamic cone calculation
+        float currentAllowedRadius = Mathf.Lerp(minAimAssistRadius, maxAimAssistRadius, distanceAlongRay / GrappleMaxDistance);
+        Vector3 pointOnCenterLine = Cam.transform.position + (Cam.transform.forward * distanceAlongRay);
+        float distanceFromCenter = Vector3.Distance(pointOnCenterLine, hit.point);
+
+        if (distanceFromCenter > currentAllowedRadius)
+            continue;
+
+        // Check for blocking obstacles
+        if (Physics.Linecast(Cam.transform.position, hit.point, obstacleMask))
+        {
+            continue; 
+        }
+
+        Vector3 directionToHit = localHitPoint.normalized;
+        float alignmentScore = Vector3.Dot(Cam.transform.forward, directionToHit);
+
+        bool isEnemy = ((1 << hit.collider.gameObject.layer) & assistPriority) != 0;
+
+        // Separate highest scoring enemy and highest scoring terrain
+        if (isEnemy)
+        {
+            if (!foundAssistEnemy || alignmentScore > bestEnemyScore)
+            {
+                bestAssistEnemyHit = hit;
+                bestEnemyScore = alignmentScore;
+                foundAssistEnemy = true;
+            }
+        }
+        else 
+        {
+            if (!foundAssistSwing || alignmentScore > bestSwingScore)
+            {
+                bestAssistSwingHit = hit;
+                bestSwingScore = alignmentScore;
+                foundAssistSwing = true;
+            }
+        }
+    }
+
+    // --- 3. PRIORITY RESOLUTION ---
+    RaycastHit finalHit = new RaycastHit();
+    bool hasValidHit = false;
+
+    // 1. Enemy in Direct Raycast
+    if (foundDirectEnemy)
+    {
+        finalHit = directHitEnemy;
+        hasValidHit = true;
+    }
+    // 2. Enemy in Aim Assist (SphereCast)
+    else if (foundAssistEnemy)
+    {
+        finalHit = bestAssistEnemyHit;
+        hasValidHit = true;
+    }
+    // 3. Terrain in Direct Raycast
+    else if (foundDirectSwing)
+    {
+        finalHit = directHitSwing;
+        hasValidHit = true;
+    }
+    // 4. Terrain in Aim Assist (SphereCast)
+    else if (foundAssistSwing)
+    {
+        finalHit = bestAssistSwingHit;
+        hasValidHit = true;
+    }
+
+    // --- 4. VISUAL FEEDBACK ---
+    if (hasValidHit)
+    {
+        predictionPoint.gameObject.SetActive(true);
+        predictionPoint.position = finalHit.point;
+    }
+    else
+    {
+        predictionPoint.gameObject.SetActive(false);
+    }
+
+    return finalHit;
+}
 
     public void GuntipPointToGrapple()
     {
