@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d581fdc961141a088f9c6b789a9b84e, type: 3}
   m_Name: LightDrone
   m_EditorClassIdentifier: Assembly-CSharp::Script.Enemy.EnemiesStats.EnemyStatSO
-  DetectionRange: 50
+  DetectionRange: 100
   MoveSpeed: 13
   AttackFrequentcy: 2

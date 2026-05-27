@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections;
+using JL.Splitting;
 using Script.Enemy.EnemiesStats;
 using Script.Enemy.State;
+using Unity.VisualScripting;
 using UnityEngine;
 using VInspector;
 
@@ -15,6 +18,10 @@ namespace Script.Enemy
         [SerializeField] internal Transform Guntip;
         [SerializeField] internal GameObject ProjectilePrefab;
         [SerializeField] internal ParticleSystem ChargeUpParticles;
+        
+        //test
+        [SerializeField] private Splittable splittable;
+        [SerializeField] private Transform _planeTransform; 
 
         public IEnemyStateFactory stateFactory { get; private set; }
         private EnemyBaseState currentState;
@@ -45,11 +52,14 @@ namespace Script.Enemy
         
         public void TakeDamage()
         {
-            Debug.Log("Died");
-            HitStopUtil.Instance.TriggerGlobalHitStop(0.1f);
-            gameObject.SetActive(false);
+            delayHitstop(0.05f);
             DeathParticles.transform.parent = null;
             DeathParticles.Play();
+            GlobalReference.Instance.player.currentEnergy = GlobalReference.Instance.player.MaxEnergy;
+            
+            //TODO add force from before take damage
+            SplitObject();
+            this.enabled = false;
         }
 
         private IEnemyStateFactory CreateFactory(EnemyType type)
@@ -66,11 +76,34 @@ namespace Script.Enemy
         }
 
         internal float staggerTime;
-        [Button]
         public void Stagger(float time = 120)
         {
             staggerTime = time;
             ChangeState(stateFactory.CreateStaggerState(this));
+        }
+
+        private void OnDrawGizmosSelected()
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(transform.position, Stat.DetectionRange);
+        }
+        
+        
+        [Button]
+        public void SplitObject()
+        {
+            ChangeState(stateFactory.CreateStaggerState(this));
+            Rigidbody srb = splittable.AddComponent<Rigidbody>();
+            srb.constraints = RigidbodyConstraints.None;
+            srb.useGravity = true;
+            PointPlane plane = new PointPlane(_planeTransform.position, _planeTransform.rotation);
+            splittable.Split(plane); 
+        }
+        
+        IEnumerator delayHitstop(float time)
+        {
+            yield return new WaitForSeconds(time);
+            HitStopUtil.Instance.TriggerGlobalHitStop(0.1f);
         }
     }
 }

@@ -16,6 +16,7 @@ MonoBehaviour:
     keys:
     - 99c9720ab356a0642a771bea13969a05
     - eb5c9f4c9a1fb5947ad33db3352e85d8
+    - 8e65e087d79bf2d4da3ce333746f3d0b
     values:
     - goDatas_byGlobalId:
         keys:
@@ -93,5 +94,31 @@ MonoBehaviour:
           iconNameOrGuid: ReflectionProbe Icon
           isIconRecursive: 0
           isColorRecursive: 0
-  bookmarks: []
+    - goDatas_byGlobalId:
+        keys:
+        - globalObjectIdString: GlobalObjectId_V1-2-8e65e087d79bf2d4da3ce333746f3d0b-706680302-0
+        - globalObjectIdString: GlobalObjectId_V1-2-8e65e087d79bf2d4da3ce333746f3d0b-953521006-0
+        - globalObjectIdString: GlobalObjectId_V1-2-8e65e087d79bf2d4da3ce333746f3d0b-476532176-0
+        - globalObjectIdString: GlobalObjectId_V1-2-8e65e087d79bf2d4da3ce333746f3d0b-2429660290967756086-1408875473
+        values:
+        - colorIndex: 2
+          iconNameOrGuid: 
+          isIconRecursive: 0
+          isColorRecursive: 1
+        - colorIndex: 4
+          iconNameOrGuid: StandaloneInputModule Icon
+          isIconRecursive: 0
+          isColorRecursive: 1
+        - colorIndex: 3
+          iconNameOrGuid: Canvas Icon
+          isIconRecursive: 0
+          isColorRecursive: 1
+        - colorIndex: 7
+          iconNameOrGuid: AvatarMask On Icon
+          isIconRecursive: 0
+          isColorRecursive: 1
+  bookmarks:
+  - _go: {fileID: 0}
+    globalId:
+      globalObjectIdString: GlobalObjectId_V1-2-8e65e087d79bf2d4da3ce333746f3d0b-2429660290967756086-1408875473
   bookmarkedScenePaths: []
