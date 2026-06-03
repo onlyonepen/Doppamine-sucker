@@ -20,6 +20,7 @@ public class SwingState : PlayerState
     private float horiInput;
 
     private bool SwingDashed = false;
+    
 
     public override void OnStateEnter(PlayerStateManager gamestateManager)
     {
@@ -34,7 +35,21 @@ public class SwingState : PlayerState
         GrapplePoint = manager.RUD.GrapplePoint;
         manager.GrappleLr.enabled = true;
         manager.GrappleLr.positionCount = 2;
-        manager.GrappleLr.SetPosition(1, GrapplePoint);
+
+        // Calculate initial visual offset
+        float currentOffset = manager.GrappleEnemyOffset;
+        if (manager.RUD.GrappledObject != null && ((1 << manager.RUD.GrappledObject.layer) & GlobalReference.Instance.EnemyLayer) != 0)
+        {
+            if (manager.RUD.GrappledObject.TryGetComponent<Collider>(out Collider col))
+            {
+                currentOffset = Mathf.Max(col.bounds.extents.x, col.bounds.extents.z);
+            }
+        }
+
+        Vector3 dirToPlayer = (manager.transform.position - GrapplePoint).normalized;
+        Vector3 visualTarget = GrapplePoint + (dirToPlayer * currentOffset);
+
+        manager.GrappleLr.SetPosition(1, visualTarget);
         InnitiateSpring();
     }
 
@@ -51,7 +66,32 @@ public class SwingState : PlayerState
 
         manager.GuntipPointToGrapple();
 
+        // 1. Determine true physical target
+        Vector3 trueTarget = GrapplePoint;
+        if (grapple == GrappleItem.Light || grapple == GrappleItem.Heavy)
+        {
+            trueTarget = manager.RUD.GrappledObject.transform.position;
+            joint.connectedAnchor = trueTarget;
+        }
 
+        // 2. Calculate dynamic offset (checks enemy bounds)
+        float currentOffset = manager.GrappleEnemyOffset;
+        if (manager.RUD.GrappledObject != null && ((1 << manager.RUD.GrappledObject.layer) & GlobalReference.Instance.EnemyLayer) != 0)
+        {
+            if (manager.RUD.GrappledObject.TryGetComponent<Collider>(out Collider col))
+            {
+                currentOffset = Mathf.Max(col.bounds.extents.x, col.bounds.extents.z);
+            }
+        }
+
+        // 3. Apply offset visual position to line renderer and hand
+        Vector3 dirToPlayer = (manager.transform.position - trueTarget).normalized;
+        Vector3 visualTarget = trueTarget + (dirToPlayer * currentOffset);
+
+        manager.GrappleHand.position = visualTarget;
+        manager.GrappleLr.SetPosition(1, visualTarget);
+
+        // Inputs & State Changes
         if (!Input.GetMouseButton(1))
         {
             switch (grapple)
@@ -80,12 +120,6 @@ public class SwingState : PlayerState
             }
         }
 
-        if (grapple == GrappleItem.Light || grapple == GrappleItem.Heavy)
-        {
-            joint.connectedAnchor = manager.RUD.GrappledObject.transform.position;
-            manager.GrappleLr.SetPosition(1, manager.RUD.GrappledObject.transform.position);
-        }
-
         vertInput = Input.GetAxis("Vertical");
         horiInput = Input.GetAxis("Horizontal");
         vertInput = new Vector2(horiInput, vertInput).normalized.y;
@@ -107,7 +141,6 @@ public class SwingState : PlayerState
         base.OnStatePhysicsUpdate();
 
         manager.rb.AddForce(Vector3.up * 5, ForceMode.Acceleration); // lower gravity for better air control
-
     }
 
     private void InnitiateSpring()
@@ -130,7 +163,6 @@ public class SwingState : PlayerState
         if (!joint) return;
 
         manager.GrappleLr.SetPosition(0, manager.Guntip.position);
-        
     }
 
     private void AirControl()
@@ -153,7 +185,6 @@ public class SwingState : PlayerState
 
             newForce = Mathf.Clamp(newForce, manager.SwingDashMinPower, manager.SwingDashMaxPower);
             manager.rb.AddForce(manager.Cam.transform.forward.normalized * newForce, ForceMode.VelocityChange);
-            //joint.maxDistance *= 1.2f;
             SwingDashed = true;
         }
     }

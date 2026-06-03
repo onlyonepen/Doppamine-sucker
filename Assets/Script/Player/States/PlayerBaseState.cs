@@ -17,6 +17,9 @@ public class PlayerBaseState : PlayerState
         distanceToFeet = Vector3.Distance(manager.transform.position, manager.feetTrans.position);
 
         manager.SideRotateJoint.DOLocalRotate(new Vector3(0, 0, 0f), 0.5f);
+
+        manager.GrappleHand.localPosition = manager.initialHandPos;
+        manager.GrappleHand.localRotation = manager.initialHandRot;
     }
 
     public override void OnStateUpdate()
@@ -24,7 +27,7 @@ public class PlayerBaseState : PlayerState
         base.OnStateUpdate();
 
         manager.GrapplePrediction();
-
+        
         WallRunCheck();
         MantleCheck();
         SlideCheck();
@@ -40,9 +43,7 @@ public class PlayerBaseState : PlayerState
 
         bool wallRight = wallRightLower && wallRightUpper;
         bool wallLeft = wallLeftLower && wallLeftUpper;
-
-        bool grounded = Physics.Raycast(manager.transform.position, Vector3.down, manager.GroundCheckDistance, LayerMask.GetMask("Ground"));
-
+        
         if ((wallRight || wallLeft) && !manager.PBM.isGrounded && Input.GetKey(KeyCode.W))
         {
             manager.ChangeState(manager.WallRunState);
@@ -94,5 +95,14 @@ public class PlayerBaseState : PlayerState
         {
             manager.ChangeState(manager.SlideState);
         }
+    }
+
+    internal void OffsetHandTowardPlayer(Vector3 targetPos)
+    {
+        Vector3 initialHandPos = manager.GrappleHand.position;
+        Vector3 directionToPlayer = (initialHandPos - targetPos).normalized;
+        
+        Vector3 newHandPos = manager.GrappleHand.position + directionToPlayer * 2;
+        manager.GrappleHand.position = newHandPos;
     }
 }

@@ -1,3 +1,4 @@
+using Script.Enemy;
 using UnityEngine;
 
 public class GrapplePullintoState : PlayerState
@@ -6,7 +7,10 @@ public class GrapplePullintoState : PlayerState
     private Vector3 initialPlayerPosition;
     private float expectedDuration;
 
-    public float pullSpeed = 40f; 
+    private bool grappleEnemy;
+    private BaseEmemy enemy;
+    
+    private float visualOffset = 1.5f;
 
     public override void OnStateEnter(PlayerStateManager gamestateManager)
     {
@@ -24,33 +28,64 @@ public class GrapplePullintoState : PlayerState
         initialPlayerPosition = manager.transform.position;
         initialEnemyDistance = Vector3.Distance(initialPlayerPosition, manager.RUD.GrappledObject.transform.position);
         
-        expectedDuration = initialEnemyDistance / pullSpeed;
+        if (manager.RUD.GrappledObject.TryGetComponent<BaseEmemy>( out var component))
+        {
+            component.GetPull();
+            grappleEnemy = true;
+            enemy = component;
+        }
+        
+        expectedDuration = initialEnemyDistance / manager.PullIntoSpeed;
 
-        manager.rb.linearVelocity = Vector3.zero; 
+        Vector3 pullDirection = (manager.RUD.GrappledObject.transform.position - initialPlayerPosition).normalized;
+        manager.rb.linearVelocity = pullDirection * manager.PullIntoSpeed;
     }
 
     public override void OnStateUpdate()
     {
         base.OnStateUpdate();
 
+        manager.RUD.GrapplePoint = manager.RUD.GrappledObject.transform.position;
         manager.GuntipPointToGrapple();
+        
+        Vector3 trueTarget = manager.RUD.GrappledObject.transform.position;
+        float currentOffset = manager.GrappleEnemyOffset;
+
+        // Check if object is an enemy and dynamically calculate offset from collider size
+        if (((1 << manager.RUD.GrappledObject.layer) & GlobalReference.Instance.EnemyLayer) != 0)
+        {
+            if (manager.RUD.GrappledObject.TryGetComponent<Collider>(out Collider col))
+            {
+                currentOffset = Mathf.Max(col.bounds.extents.x, col.bounds.extents.z);
+            }
+        }
+
+        Vector3 dirToPlayer = (manager.transform.position - trueTarget).normalized;
+        Vector3 visualPos = trueTarget + (dirToPlayer * currentOffset);
+
+        manager.GrappleHand.position = visualPos;
 
         float elapsed = Time.time - stateEnterTime;
         float percent = expectedDuration > 0 ? Mathf.Clamp01(elapsed / expectedDuration) : 1f;
         
-        PullIn(percent);
+        PullIn(percent); 
         
         if (percent >= 0.95f)
         {
             if (manager.RUD.GrappledObject.TryGetComponent<IDamagable>(out var component)) 
             {
-                component.TakeDamage();
+                component.SplitDeath();
             }
-            manager.ChangeState(manager.BaseState);
         }
 
         manager.GrappleLr.SetPosition(0, manager.Guntip.position);
-        manager.GrappleLr.SetPosition(1, manager.RUD.GrappledObject.transform.position);
+        manager.GrappleLr.SetPosition(1, visualPos); 
+        
+        float distance = Vector3.Distance(manager.transform.position, trueTarget);
+        if (distance <= 6f) 
+        {
+            manager.ChangeState(manager.BaseState);
+        }
     }
 
     public override void OnStateExit()
@@ -63,14 +98,15 @@ public class GrapplePullintoState : PlayerState
         manager.PBM.FloatingCapsuleActive = true;
 
         Vector3 pullDirection = (manager.RUD.GrappledObject.transform.position - initialPlayerPosition).normalized;
+        manager.rb.linearVelocity = pullDirection * manager.PullIntoSpeed;
         
-        manager.rb.linearVelocity = pullDirection * pullSpeed * 0.8f;
+        if(grappleEnemy) enemy.SplitDeath();
     }
 
     private void PullIn(float percent)
     {
         Vector3 origin = initialPlayerPosition;
-        Vector3 targetGoal = manager.RUD.GrappledObject.transform.position;
+        Vector3 targetGoal = manager.RUD.GrappledObject.transform.position; 
         
         Vector3 newPos = Vector3.Lerp(origin, targetGoal, percent);
         manager.rb.MovePosition(newPos); 

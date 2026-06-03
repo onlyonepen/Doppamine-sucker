@@ -18,6 +18,7 @@ TagManager:
   - LightEnemy
   - HeavyEnemy
   - Parriable
+  - EnemyMesh
   - 
   - 
   - 
@@ -34,8 +35,7 @@ TagManager:
   - 
   - 
   - 
-  - 
-  - 
+  - PlayerHands
   - Crosshair
   m_SortingLayers:
   - name: Default

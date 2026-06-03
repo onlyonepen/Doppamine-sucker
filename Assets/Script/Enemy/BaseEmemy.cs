@@ -50,16 +50,20 @@ namespace Script.Enemy
             ChangeState(stateFactory.CreateStaggerState(this));
         }
         
-        public void TakeDamage()
+        public void SplitDeath()
         {
-            delayHitstop(0.05f);
+            Death();
+            SplitObject();
+        }
+
+        public void Death()
+        {
+            //StartCoroutine(delayHitstop(0.05f));
             DeathParticles.transform.parent = null;
             DeathParticles.Play();
+            ChangeState(stateFactory.CreateStaggerState(this));
+            enabled = false;
             GlobalReference.Instance.player.currentEnergy = GlobalReference.Instance.player.MaxEnergy;
-            
-            //TODO add force from before take damage
-            SplitObject();
-            this.enabled = false;
         }
 
         private IEnemyStateFactory CreateFactory(EnemyType type)
@@ -81,29 +85,27 @@ namespace Script.Enemy
             staggerTime = time;
             ChangeState(stateFactory.CreateStaggerState(this));
         }
+        public void SplitObject()
+        {
+            ChangeState(stateFactory.CreateStaggerState(this));
+            PointPlane plane = new PointPlane(_planeTransform.position, _planeTransform.rotation);
+            splittable.SplitAsync(plane, (SplitResult result) =>
+            {
+                result.posObject.AddComponent<Rigidbody>();
+                result.negObject.AddComponent<Rigidbody>();
+            });
+            splittable.SplitAsync(plane);
+        }
+        IEnumerator delayHitstop(float time)
+        {
+            yield return new WaitForSeconds(time);
+            HitStopUtil.Instance.TriggerGlobalHitStop(0.3f);
+        }
 
         private void OnDrawGizmosSelected()
         {
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(transform.position, Stat.DetectionRange);
-        }
-        
-        
-        [Button]
-        public void SplitObject()
-        {
-            ChangeState(stateFactory.CreateStaggerState(this));
-            Rigidbody srb = splittable.AddComponent<Rigidbody>();
-            srb.constraints = RigidbodyConstraints.None;
-            srb.useGravity = true;
-            PointPlane plane = new PointPlane(_planeTransform.position, _planeTransform.rotation);
-            splittable.Split(plane); 
-        }
-        
-        IEnumerator delayHitstop(float time)
-        {
-            yield return new WaitForSeconds(time);
-            HitStopUtil.Instance.TriggerGlobalHitStop(0.1f);
         }
     }
 }

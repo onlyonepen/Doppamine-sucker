@@ -3,8 +3,10 @@ using UnityEngine;
 public class GrappleLeapState : PlayerState
 {
     float enterTimeStamp;
-
     bool isExtraGravOn = false;
+
+    private float visualOffset = 0.25f;
+
     public override void OnStateEnter(PlayerStateManager gamestateManager)
     {
         base.OnStateEnter(gamestateManager);
@@ -24,7 +26,7 @@ public class GrappleLeapState : PlayerState
 
         manager.rb.linearVelocity = Vector3.zero;
 
-        JumpToGrapplePos();
+        JumpToGrapplePos(); 
     }
 
     public override void OnStateUpdate()
@@ -33,11 +35,31 @@ public class GrappleLeapState : PlayerState
 
         manager.GuntipPointToGrapple();
 
+        Vector3 trueTarget = manager.RUD.GrapplePoint;
+        float currentOffset = manager.GrappleEnemyOffset;
+
+        // Check if object is an enemy and dynamically calculate offset from collider size
+        if (manager.RUD.GrappledObject != null && ((1 << manager.RUD.GrappledObject.layer) & GlobalReference.Instance.EnemyLayer) != 0) 
+        {
+            trueTarget = manager.RUD.GrappledObject.transform.position;
+
+            if (manager.RUD.GrappledObject.TryGetComponent<Collider>(out Collider col))
+            {
+                currentOffset = Mathf.Max(col.bounds.extents.x, col.bounds.extents.z);
+            }
+        }
+        
+        Vector3 dirToPlayer = (manager.transform.position - trueTarget).normalized;
+        Vector3 visualTarget = trueTarget + (dirToPlayer * currentOffset);
+
+        manager.GrappleHand.position = visualTarget;
+
         AirControl();
 
         float elapsed = Time.time - stateEnterTime;
         float percent = Mathf.Clamp01(elapsed / 0.15f);
-        DrawTuggingRope(percent);
+        
+        DrawTuggingRope(percent, visualTarget);
 
         if(Time.time - enterTimeStamp > 0.5f)
         {
@@ -64,7 +86,6 @@ public class GrappleLeapState : PlayerState
         manager.ChangeState(manager.pullRopeBackState);
     }
 
-
     private void AirControl()
     {
         float vertical = Input.GetAxis("Vertical") * manager.AirControlFwdForce;
@@ -81,7 +102,6 @@ public class GrappleLeapState : PlayerState
 
         float grapplePointRelativeYPos = manager.RUD.GrapplePoint.y - lowestPoint.y;
         float highestPointOnArc = grapplePointRelativeYPos + manager.OvershootYAxis;
-
 
         if (grapplePointRelativeYPos < 0) highestPointOnArc = manager.OvershootYAxis;
 
@@ -107,23 +127,19 @@ public class GrappleLeapState : PlayerState
     }
 
     public int segmentCount = 30;
-    public float maxTugAmplitude = .75f; // How far the rope bends at max tug
+    public float maxTugAmplitude = .75f; 
 
-    void DrawTuggingRope(float percent)
+    void DrawTuggingRope(float percent, Vector3 visualTarget)
     {
         if(percent > 1)
         {
             manager.GrappleLr.positionCount = 2;
             manager.GrappleLr.SetPosition(0, manager.Guntip.position);
-            manager.GrappleLr.SetPosition(1, manager.RUD.GrappledObject.transform.position);
+            manager.GrappleLr.SetPosition(1, visualTarget);
             return;
         }
 
         Vector3 origin = manager.Guntip.position;
-
-        Vector3 target = manager.RUD.GrapplePoint;
-        if (((1 << manager.RUD.GrappledObject.layer) & GlobalReference.Instance.EnemyLayer) != 0) target = manager.RUD.GrappledObject.transform.position;
-
         manager.GrappleLr.positionCount = segmentCount;
 
         float animationLift = Mathf.Sin(percent * Mathf.PI * 2) * maxTugAmplitude;
@@ -131,15 +147,11 @@ public class GrappleLeapState : PlayerState
         for (int i = 0; i < segmentCount; i++)
         {
             float t = i / (float)(segmentCount - 1);
-
-            Vector3 pos = Vector3.Lerp(origin, target, t);
-
+            Vector3 pos = Vector3.Lerp(origin, visualTarget, t);
             float curveShape = Mathf.Sin(t * Mathf.PI);
-
             pos += manager.transform.up * (curveShape * animationLift);
 
             manager.GrappleLr.SetPosition(i, pos);
         }
     }
-
 }

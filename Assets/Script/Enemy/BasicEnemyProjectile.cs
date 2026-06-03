@@ -43,8 +43,7 @@ public class BasicEnemyProjectile : MonoBehaviour , IParriable
         {
                 parried = true;
                 ProjectileOwner.ChangeState(ProjectileOwner.stateFactory.CreateStaggerState(ProjectileOwner));
-                float ownerDistance = Vector3.Distance(transform.position, ProjectileOwner.transform.position);
-
+                HitStopUtil.Instance.TriggerGlobalHitStop(0.15f);
                 float DiedDelay = 0.1f;
                 transform.DOMove(ProjectileOwner.transform.position, DiedDelay).SetEase(Ease.Linear);
                 Invoke("KillOwner", DiedDelay);
@@ -52,7 +51,7 @@ public class BasicEnemyProjectile : MonoBehaviour , IParriable
 
         private void KillOwner()
         {
-                ProjectileOwner.TakeDamage();
+                ProjectileOwner.Death();
                 Destroy(gameObject);
         }
 }

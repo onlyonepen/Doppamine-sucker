@@ -1,7 +1,4 @@
-using DG.Tweening;
 using UnityEngine;
-using static UnityEngine.UI.Image;
-
 public class ThrowGrappleState : PlayerState
 {
     RaycastHit grappleCastHit;
@@ -40,13 +37,14 @@ public class ThrowGrappleState : PlayerState
     {
         base.OnStateUpdate();
 
+        Debug.unityLogger.Log(manager.RUD.GrapplePoint);
         manager.GuntipPointToGrapple();
 
         float elapsed = Time.time - stateEnterTime;
         float percent = Mathf.Clamp01(elapsed / manager.GrappleTravelTime);
 
         DrawAnimatedRope(percent);
-
+        
         if (Time.time - stateEnterTime > manager.GrappleTravelTime)
         { 
             if ( grappleCastHit.collider == null)
@@ -76,6 +74,7 @@ public class ThrowGrappleState : PlayerState
         Vector3 origin = manager.Guntip.position;
         Vector3 targetGoal = manager.RUD.GrapplePoint;
         var grappledObj = manager.RUD.GrappledObject;
+        
         if (grappledObj != null) 
         {
             // 3. Explicitly group the bitshift (1 << layer) for better readability
@@ -84,7 +83,8 @@ public class ThrowGrappleState : PlayerState
                 targetGoal = grappledObj.transform.position;
             }
         }
-        else return;
+        else return; 
+        
         Vector3 currentTipPos = Vector3.Lerp(origin, targetGoal, percent);
 
         for (int i = 0; i < segmentCount; i++)
@@ -104,7 +104,11 @@ public class ThrowGrappleState : PlayerState
                 pos += manager.transform.up * wave;
                 pos += manager.transform.right * (wave * 0.5f);
             }
+
             manager.GrappleLr.SetPosition(i, pos);
         }
+
+        // Assigning the hand position to follow the end of the line renderer
+        manager. GrappleHand.position = currentTipPos;
     }
 }

@@ -9,13 +9,15 @@ public class GrapplePullState : PlayerState
     private SpringJoint joint;
 
     GameObject grappledObj;
-    private Rigidbody grappledObjRb; // Cached Rigidbody for MovePosition
+    private Rigidbody grappledObjRb;
     Vector3 initialObjPos;
 
     bool grappleEnemy = false;
     private BaseEmemy enemy;
 
     private Vector3 initialVelocity;
+    
+    private float visualOffset = 0.25f; 
     
     public override void OnStateEnter(PlayerStateManager gamestateManager)
     {
@@ -24,9 +26,7 @@ public class GrapplePullState : PlayerState
         grappledObj = manager.RUD.GrappledObject;
         initialObjPos = grappledObj.transform.position;
         
-        // Safely cache the Rigidbody once when the state begins
         grappledObj.TryGetComponent<Rigidbody>(out grappledObjRb);
-        Debug.Log(grappledObjRb);
 
         if (grappledObj.TryGetComponent<BaseEmemy>( out var component))
         {
@@ -37,6 +37,10 @@ public class GrapplePullState : PlayerState
         
         initialVelocity = manager.rb.linearVelocity;
         manager.rb.linearVelocity *= 0.2f;
+
+        // Ensure the line renderer is ready for a simple 2-point straight line
+        manager.GrappleLr.enabled = true;
+        manager.GrappleLr.positionCount = 2;
     }
 
     public override void OnStateUpdate()
@@ -46,10 +50,31 @@ public class GrapplePullState : PlayerState
         manager.RUD.GrapplePoint = grappledObj.transform.position;
         manager.GuntipPointToGrapple();
 
+        float currentOffset = manager.GrappleEnemyOffset;
+
+        // Check if object is an enemy and dynamically calculate offset from collider size
+        if (((1 << grappledObj.layer) & GlobalReference.Instance.EnemyLayer) != 0)
+        {
+            if (grappledObj.TryGetComponent<Collider>(out Collider col))
+            {
+                currentOffset = Mathf.Max(col.bounds.extents.x, col.bounds.extents.z);
+            }
+        }
+
+        Vector3 dirToPlayer = (manager.transform.position - grappledObj.transform.position).normalized;
+        Vector3 visualPos = grappledObj.transform.position + (dirToPlayer * currentOffset);
+        
+        manager.GrappleHand.position = visualPos;
+
+        // Draw simple straight rope
+        manager.GrappleLr.SetPosition(0, manager.Guntip.position);
+        manager.GrappleLr.SetPosition(1, visualPos);
+
         float elapsed = Time.time - stateEnterTime;
         float percent = Mathf.Clamp01(elapsed / .5f);
-        DrawTuggingRope(percent);
+        
         UpdateObjectPos(percent);
+        
         if (percent == 1)
         {
             manager.ChangeState(manager.BaseState);
@@ -63,13 +88,12 @@ public class GrapplePullState : PlayerState
         base.OnStateExit();
         manager.GrappleLr.enabled = false;
         
-        // Use the cached Rigidbody here as well
         if (grappledObjRb != null) 
         {
             grappledObjRb.linearVelocity = Vector3.zero;
         }
         
-        if(grappleEnemy) enemy.TakeDamage();
+        if(grappleEnemy) enemy.SplitDeath();
         manager.rb.linearVelocity = initialVelocity;
     }
 
@@ -79,7 +103,6 @@ public class GrapplePullState : PlayerState
         Vector3 target = initialObjPos;
         Vector3 pos = Vector3.Lerp(target, origin, percent);
         
-        // Apply MovePosition for physics calculation, fallback to transform if no Rigidbody exists
         if (grappledObjRb != null)
         {
             grappledObjRb.MovePosition(pos);
@@ -90,157 +113,9 @@ public class GrapplePullState : PlayerState
         }
         
         float distance = Vector3.Distance(pos, manager.transform.position);
-        if (distance <= 3) //TODO Use attack distance later
+        if (distance <= 6) 
         {
             manager.ChangeState(manager.BaseState);
         }
     }
-
-    public int segmentCount = 30;
-    public float maxTugAmplitude = 1.5f; // How far the rope bends at max tug
-
-    void DrawTuggingRope(float percent)
-    {
-        if (percent == 1)
-        {
-            manager.GrappleLr.positionCount = 2;
-            manager.GrappleLr.SetPosition(0, manager.Guntip.position);
-            manager.GrappleLr.SetPosition(1, manager.RUD.GrappledObject.transform.position);
-            return;
-        }
-
-        Vector3 origin = manager.Guntip.position;
-        Vector3 target = manager.RUD.GrappledObject.transform.position;
-
-        manager.GrappleLr.positionCount = segmentCount;
-
-        float animationLift = Mathf.Sin(percent * Mathf.PI * 2) * maxTugAmplitude;
-
-        for (int i = 0; i < segmentCount; i++)
-        {
-            float t = i / (float)(segmentCount - 1);
-            Vector3 pos = Vector3.Lerp(origin, target, t);
-            float curveShape = Mathf.Sin(t * Mathf.PI);
-            pos += manager.transform.up * (curveShape * animationLift);
-
-            manager.GrappleLr.SetPosition(i, pos);
-        }
-    }
 }
-
-// using DG.Tweening;
-// using System.Collections;
-// using Script.Enemy;
-// using UnityEngine;
-//
-// public class GrapplePullState : PlayerState
-// {
-//     //bool isExtraGravOn;
-//     private float airFloatForce = 7f;
-//
-//     private SpringJoint joint;
-//
-//     GameObject grappledObj;
-//     Vector3 initialObjPos;
-//
-//     bool grappleEnemy = false;
-//     private BaseEmemy enemy;
-//
-//     private Vector3 initialVelocity;
-//     
-//     public override void OnStateEnter(PlayerStateManager gamestateManager)
-//     {
-//         base.OnStateEnter(gamestateManager);
-//
-//         grappledObj = manager.RUD.GrappledObject;
-//         initialObjPos = grappledObj.transform.position;
-//
-//         if (grappledObj.TryGetComponent<BaseEmemy>( out var component))
-//         {
-//             component.GetPull();
-//             grappleEnemy = true;
-//             enemy = component;
-//         }
-//         
-//         initialVelocity = manager.rb.linearVelocity;
-//         manager.rb.linearVelocity *= 0.2f;
-//     }
-//
-//     public override void OnStateUpdate()
-//     {
-//         base.OnStateUpdate();
-//
-//         manager.RUD.GrapplePoint = grappledObj.transform.position;
-//         manager.GuntipPointToGrapple();
-//
-//         float elapsed = Time.time - stateEnterTime;
-//         float percent = Mathf.Clamp01(elapsed / .5f);
-//         DrawTuggingRope(percent);
-//         UpdateObjectPos(percent);
-//         if (percent == 1)
-//         {
-//             manager.ChangeState(manager.BaseState);
-//         }
-//         
-//         manager.rb.AddForce(Vector3.up * airFloatForce, ForceMode.Acceleration);
-//     }
-//
-//     public override void OnStateExit()
-//     {
-//         base.OnStateExit();
-//         manager.GrappleLr.enabled = false;
-//         grappledObj.GetComponent<Rigidbody>().linearVelocity = Vector3.zero;
-//         
-//         if(grappleEnemy) enemy.TakeDamage();
-//         manager.rb.linearVelocity = initialVelocity;
-//     }
-//
-//     private void UpdateObjectPos(float percent)
-//     {
-//         Vector3 origin = manager.Cam.transform.position + (manager.Cam.transform.forward * 1);
-//         Vector3 target = initialObjPos;
-//         Vector3 pos = Vector3.Lerp(target, origin, percent);
-//         grappledObj.transform.position = pos;
-//         
-//         float distance = Vector3.Distance(pos, manager.transform.position);
-//         if (distance <= 3) //TODO Use attack distance later
-//         {
-//             manager.ChangeState(manager.BaseState);
-//         }
-//     }
-//
-//     public int segmentCount = 30;
-//     public float maxTugAmplitude = 1.5f; // How far the rope bends at max tug
-//
-//     void DrawTuggingRope(float percent)
-//     {
-//         if (percent == 1)
-//         {
-//             manager.GrappleLr.positionCount = 2;
-//             manager.GrappleLr.SetPosition(0, manager.Guntip.position);
-//             manager.GrappleLr.SetPosition(1, manager.RUD.GrappledObject.transform.position);
-//             return;
-//         }
-//
-//         Vector3 origin = manager.Guntip.position;
-//
-//         Vector3 target = manager.RUD.GrappledObject.transform.position;
-//
-//         manager.GrappleLr.positionCount = segmentCount;
-//
-//         float animationLift = Mathf.Sin(percent * Mathf.PI * 2) * maxTugAmplitude;
-//
-//         for (int i = 0; i < segmentCount; i++)
-//         {
-//             float t = i / (float)(segmentCount - 1);
-//
-//             Vector3 pos = Vector3.Lerp(origin, target, t);
-//
-//             float curveShape = Mathf.Sin(t * Mathf.PI);
-//
-//             pos += manager.transform.up * (curveShape * animationLift);
-//
-//             manager.GrappleLr.SetPosition(i, pos);
-//         }
-//     }
-// }

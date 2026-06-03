@@ -12,7 +12,7 @@ public class PullBackRopeState : PlayerState
     public override void OnStateUpdate()
     {
         base.OnStateUpdate();
-
+        
         float elapsed = Time.time - stateEnterTime;
         float percent = Mathf.Clamp01(elapsed / pullTime);
         DrawRope(percent);
@@ -39,5 +39,6 @@ public class PullBackRopeState : PlayerState
         Vector3 targetGoal = manager.Guntip.position;
         Vector3 currentTipPos = Vector3.Lerp(origin, targetGoal, percent);
         manager.GrappleLr.SetPosition(1, currentTipPos);
+        manager.GrappleHand.position = currentTipPos;
     }
 }

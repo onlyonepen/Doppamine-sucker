@@ -66,7 +66,7 @@ public class PlayerAttacking : MonoBehaviour
     
                 if (damagable != null && hitTargets.Add(damagable))
                 {
-                    damagable.TakeDamage(); 
+                    damagable.SplitDeath(); 
                 }
             }
             else if (obj.layer == parriableLayer)

@@ -77,7 +77,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.5
+  m_Radius: 1.21
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &2442969769038734055
 Rigidbody:
@@ -229,7 +229,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4424479454113075806}
   - component: {fileID: 6924287130106392761}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: LightDrone
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -268,7 +268,7 @@ MonoBehaviour:
   CapMaterial: {fileID: 2100000, guid: 3c9805db234041041bd64e3d7c5c7abb, type: 2}
   CapUVMin: {x: 0, y: 0}
   CapUVMax: {x: 1, y: 1}
-  SplitForce: 15
+  SplitForce: 500
   DestroyOriginalMeshWhenSplit: 0
   targetMeshFilter: {fileID: 567844425580254421}
   generateMeshColliders: 1
@@ -283,7 +283,7 @@ GameObject:
   - component: {fileID: 3710593816605717566}
   - component: {fileID: 5206008422331970132}
   - component: {fileID: 3647699795240030719}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: ChargeUpShot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -10013,7 +10013,7 @@ GameObject:
   - component: {fileID: 5926903868519092702}
   - component: {fileID: 567844425580254421}
   - component: {fileID: 5498523461106803522}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Drone
   m_TagString: Untagged
   m_Icon: {fileID: 0}

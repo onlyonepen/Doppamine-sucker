@@ -100,9 +100,12 @@ MonoBehaviour:
         - globalObjectIdString: GlobalObjectId_V1-2-8e65e087d79bf2d4da3ce333746f3d0b-953521006-0
         - globalObjectIdString: GlobalObjectId_V1-2-8e65e087d79bf2d4da3ce333746f3d0b-476532176-0
         - globalObjectIdString: GlobalObjectId_V1-2-8e65e087d79bf2d4da3ce333746f3d0b-2429660290967756086-1408875473
+        - globalObjectIdString: GlobalObjectId_V1-2-8e65e087d79bf2d4da3ce333746f3d0b-1284863255-0
+        - globalObjectIdString: GlobalObjectId_V1-2-8e65e087d79bf2d4da3ce333746f3d0b-1366218843-0
+        - globalObjectIdString: GlobalObjectId_V1-2-8e65e087d79bf2d4da3ce333746f3d0b-152004936-0
         values:
         - colorIndex: 2
-          iconNameOrGuid: 
+          iconNameOrGuid: AvatarMask On Icon
           isIconRecursive: 0
           isColorRecursive: 1
         - colorIndex: 4
@@ -117,6 +120,18 @@ MonoBehaviour:
           iconNameOrGuid: AvatarMask On Icon
           isIconRecursive: 0
           isColorRecursive: 1
+        - colorIndex: 0
+          iconNameOrGuid: DirectionalLight Icon
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 0
+          iconNameOrGuid: BoxCollider Icon
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 0
+          iconNameOrGuid: Terrain Icon
+          isIconRecursive: 0
+          isColorRecursive: 0
   bookmarks:
   - _go: {fileID: 0}
     globalId:
