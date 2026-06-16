@@ -38,14 +38,32 @@ namespace Script.Enemy.State.Idle
             float playerDist = Vector3.Distance(player.transform.position, Enemy.transform.position);
             if (playerDist > Enemy.Stat.DetectionRange) return;
 
-            Vector3 toPlayer = player.transform.position - Enemy.transform.position;
-            bool seePLayer = Physics.Raycast(Enemy.transform.position, toPlayer, playerDist + 5f, GlobalReference.Instance.playerLayer);
+            LayerMask playerAndGround = GlobalReference.Instance.playerLayer | GlobalReference.Instance.TerrainLayer;
+    
+            // Normalize the direction vector for accurate raycasting
+            Vector3 toPlayer = (player.transform.position - Enemy.transform.position).normalized;
+    
+            bool seePLayer = false;
 
-            
+            Debug.Log("0");
+            // Cast the ray against BOTH the terrain and the player
+            if (Physics.Raycast(Enemy.transform.position, toPlayer, out RaycastHit hit, playerDist + 5f, playerAndGround))
+            {
+                Debug.Log("1");
+                // If the very first object the ray hits is the player, they have line of sight!
+                // If it hits a wall first, this remains false.
+                if (((1 << hit.collider.gameObject.layer) & GlobalReference.Instance.playerLayer) != 0)
+                {
+                    Debug.Log("2");
+                    seePLayer = true;
+                }
+            }
+
             if (seePLayer) detectionValue += Time.deltaTime;
             else detectionValue -= Time.deltaTime;
-            
-            if (seePLayer && (detectionValue > toAggroTime) || playerDist < 15) Enemy.ChangeState(Enemy.stateFactory.CreateAggroState(Enemy));
+    
+            if ((seePLayer && detectionValue > toAggroTime) || playerDist < 15) 
+                Enemy.ChangeState(Enemy.stateFactory.CreateAggroState(Enemy));
         }
     }
 }
