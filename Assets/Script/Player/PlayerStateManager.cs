@@ -5,6 +5,7 @@ using VInspector;
 public class PlayerStateManager : MonoBehaviour
 {
     [Header("Energy")]
+    public bool useEnergy = true;
     public float MaxEnergy = 100f;
     public float InitialThrowUsage = 20;
     public float GrappleLeapUsage = 40;
@@ -23,6 +24,8 @@ public class PlayerStateManager : MonoBehaviour
     public LayerMask TerrainLayer;
     public Transform feetTrans;
     public PlayerCameraController camController;
+    public PlayerAttackArea AttackArea;
+    public PlayerHpManager playerHp;
     [Header("CameraFov")]
     public float minFov = 80f;
     public float maxFov = 100f;
@@ -48,7 +51,7 @@ public class PlayerStateManager : MonoBehaviour
     [Header("Grapple")]
     public Transform grappleGun;
     public Transform Guntip;
-    public Transform GrappleHand;
+    public Transform GrappleArm;
     public float GrappleEnemyOffset = 1.5f;
     internal Vector3 initialHandPos;
     internal Quaternion initialHandRot;
@@ -72,6 +75,8 @@ public class PlayerStateManager : MonoBehaviour
     public float PullIntoSpeed = 40f;
     public float OvershootYAxis = 3f;
 
+    [HideInInspector] public bool canGrapple;
+
     #region states
 
     public PlayerState CurrentState;
@@ -93,8 +98,8 @@ public class PlayerStateManager : MonoBehaviour
     {
         currentEnergy = MaxEnergy;
         currentFov = minFov;
-        initialHandPos = GrappleHand.localPosition;
-        initialHandRot = GrappleHand.localRotation;
+        initialHandPos = GrappleArm.localPosition;
+        initialHandRot = GrappleArm.localRotation;
         
         CurrentState = BaseState;
         CurrentState.OnStateEnter(this);
@@ -130,19 +135,19 @@ public class PlayerStateManager : MonoBehaviour
         LayerMask assistPriority = HeavyPull | Pullable; // Enemies / Pullables
         LayerMask allGrappleMasks = Swingable | assistPriority;
         LayerMask obstacleMask = GlobalReference.Instance.TerrainLayer; 
-    
+
         // --- 1. DIRECT RAYCAST ---
         RaycastHit directHitEnemy = new RaycastHit();
         bool foundDirectEnemy = false;
         
         RaycastHit directHitSwing = new RaycastHit();
         bool foundDirectSwing = false;
-    
+
         // Check perfectly down the center first
         if (Physics.Raycast(Cam.transform.position, Cam.transform.forward, out RaycastHit tempDirect, GrappleMaxDistance, allGrappleMasks | obstacleMask))
         {
             int hitLayer = 1 << tempDirect.collider.gameObject.layer;
-    
+
             // Is the direct hit an enemy?
             if ((hitLayer & assistPriority) != 0)
             {
@@ -155,10 +160,8 @@ public class PlayerStateManager : MonoBehaviour
                 directHitSwing = tempDirect;
                 foundDirectSwing = true;
             }
-            // If it hits obstacleMask exclusively, it correctly blocks the raycast 
-            // without setting either to true.
         }
-    
+
         // --- 2. AIM ASSIST (SPHERECAST) ---
         RaycastHit[] hits = Physics.SphereCastAll(
             Cam.transform.position, 
@@ -167,41 +170,49 @@ public class PlayerStateManager : MonoBehaviour
             GrappleMaxDistance, 
             allGrappleMasks
         );
-    
+
         RaycastHit bestAssistEnemyHit = new RaycastHit();
         float bestEnemyScore = -1f;
         bool foundAssistEnemy = false;
-    
+
         RaycastHit bestAssistSwingHit = new RaycastHit();
         float bestSwingScore = -1f;
         bool foundAssistSwing = false;
-    
+
         foreach (RaycastHit hit in hits)
         {
+            // Unity Quirk: If the SphereCast starts inside a collider, hit.point returns Vector3.zero.
+            // This line prevents mathematical errors when calculating the localHitPoint.
+            if (hit.point == Vector3.zero) continue;
+
             Vector3 localHitPoint = hit.point - Cam.transform.position;
             float distanceAlongRay = Vector3.Dot(localHitPoint, Cam.transform.forward);
-    
+
             if (distanceAlongRay < 0) continue; 
-    
+
             // Dynamic cone calculation
             float currentAllowedRadius = Mathf.Lerp(minAimAssistRadius, maxAimAssistRadius, distanceAlongRay / GrappleMaxDistance);
             Vector3 pointOnCenterLine = Cam.transform.position + (Cam.transform.forward * distanceAlongRay);
             float distanceFromCenter = Vector3.Distance(pointOnCenterLine, hit.point);
-    
+
             if (distanceFromCenter > currentAllowedRadius)
                 continue;
-    
-            // Check for blocking obstacles
-            if (Physics.Linecast(Cam.transform.position, hit.point, obstacleMask))
+
+            // FIXED: Check for blocking obstacles safely!
+            // Output the hit data, and verify we aren't just hitting the object we want to grapple.
+            if (Physics.Linecast(Cam.transform.position, hit.point, out RaycastHit blockHit, obstacleMask))
             {
-                continue; 
+                if (blockHit.collider != hit.collider)
+                {
+                    continue; // It's blocked by a different obstacle
+                }
             }
-    
+
             Vector3 directionToHit = localHitPoint.normalized;
             float alignmentScore = Vector3.Dot(Cam.transform.forward, directionToHit);
-    
+
             bool isEnemy = ((1 << hit.collider.gameObject.layer) & assistPriority) != 0;
-    
+
             // Separate highest scoring enemy and highest scoring terrain
             if (isEnemy)
             {
@@ -222,36 +233,36 @@ public class PlayerStateManager : MonoBehaviour
                 }
             }
         }
-    
+
         // --- 3. PRIORITY RESOLUTION ---
         RaycastHit finalHit = new RaycastHit();
         bool hasValidHit = false;
-    
-        // 1. Enemy in Direct Raycast
+
+        // 1. Enemy in Direct Raycast (Intentional Combat)
         if (foundDirectEnemy)
         {
             finalHit = directHitEnemy;
             hasValidHit = true;
         }
-        // 2. Enemy in Aim Assist (SphereCast)
-        else if (foundAssistEnemy)
-        {
-            finalHit = bestAssistEnemyHit;
-            hasValidHit = true;
-        }
-        // 3. Terrain in Direct Raycast
+        // 2. Terrain in Direct Raycast (Intentional Traversal)
         else if (foundDirectSwing)
         {
             finalHit = directHitSwing;
             hasValidHit = true;
         }
-        // 4. Terrain in Aim Assist (SphereCast)
+        // 3. Enemy in Aim Assist (Forgiving Combat)
+        else if (foundAssistEnemy)
+        {
+            finalHit = bestAssistEnemyHit;
+            hasValidHit = true;
+        }
+        // 4. Terrain in Aim Assist (Forgiving Traversal)
         else if (foundAssistSwing)
         {
             finalHit = bestAssistSwingHit;
             hasValidHit = true;
         }
-    
+
         // --- 4. VISUAL FEEDBACK ---
         if (hasValidHit)
         {
@@ -262,10 +273,9 @@ public class PlayerStateManager : MonoBehaviour
         {
             predictionPoint.gameObject.SetActive(false);
         }
-    
+
         return finalHit;
     }
-
     public void GuntipPointToGrapple()
     {
         grappleGun.LookAt(RUD.GrapplePoint);
@@ -295,6 +305,8 @@ public class PlayerStateManager : MonoBehaviour
 
     public bool UseEnergy(float Usage)
     {
+        return true;
+        
         if (currentEnergy - Usage >= 0)
         {
             currentEnergy -= Usage;

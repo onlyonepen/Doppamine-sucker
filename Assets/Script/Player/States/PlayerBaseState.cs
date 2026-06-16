@@ -4,7 +4,7 @@ using UnityEngine;
 public class PlayerBaseState : PlayerState
 {
     private float distanceToFeet;
-
+    private Tween armtween;
 
     public override void OnStateEnter(PlayerStateManager gamestateManager)
     {
@@ -18,8 +18,11 @@ public class PlayerBaseState : PlayerState
 
         manager.SideRotateJoint.DOLocalRotate(new Vector3(0, 0, 0f), 0.5f);
 
-        manager.GrappleHand.localPosition = manager.initialHandPos;
-        manager.GrappleHand.localRotation = manager.initialHandRot;
+        manager.GrappleArm.localPosition = manager.initialHandPos;
+        manager.GrappleArm.localRotation = manager.initialHandRot;
+        
+        //hardcode
+        manager.grappleGun.gameObject.SetActive(false);
     }
 
     public override void OnStateUpdate()
@@ -31,7 +34,14 @@ public class PlayerBaseState : PlayerState
         WallRunCheck();
         MantleCheck();
         SlideCheck();
-        if (Input.GetMouseButtonDown(1) && manager.UseEnergy(manager.InitialThrowUsage)) manager.ChangeState(manager.ThrowGrappleState);
+        
+        //if(!manager.PBM.isGrounded) AirControl();
+        
+        if (Input.GetMouseButtonDown(1) && manager.UseEnergy(manager.InitialThrowUsage))
+        {
+            manager.grappleGun.gameObject.SetActive(true);
+            manager.ChangeState(manager.ThrowGrappleState);
+        }
     }
 
     private void WallRunCheck()
@@ -96,13 +106,32 @@ public class PlayerBaseState : PlayerState
             manager.ChangeState(manager.SlideState);
         }
     }
-
-    internal void OffsetHandTowardPlayer(Vector3 targetPos)
+    
+    private void AirControl()
     {
-        Vector3 initialHandPos = manager.GrappleHand.position;
-        Vector3 directionToPlayer = (initialHandPos - targetPos).normalized;
+        // 1. Cleanly grab and normalize inputs so diagonal movement isn't faster
+        // (This fixes a small bug where your old vertInput was overriding before horiInput calculated)
+        Vector2 inputDir = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical")).normalized;
+    
+        float vertical = inputDir.y * manager.AirControlFwdForce;
+        float horizontal = inputDir.x * manager.AirControlHorizontalForce;
+    
+        // 2. Calculate the base force direction using the camera's orientation
+        Vector3 TotalForceDir = (manager.Cam.transform.forward * vertical) + (manager.Cam.transform.right * horizontal);
+
+        // 3. THE FIX: Flatten the Y axis entirely so the player cannot fly upwards or downwards
+        TotalForceDir.y = 0f;
+
+        // 4. THE NERF: Tone down the overall air control
+        // Tweak this float to dial in the exact "heaviness" you want in the air
+
+        // 5. Apply the speed boost if under walking speed
+        if (manager.rb.linearVelocity.magnitude < manager.PBM.walkSpeed) 
+        {
+            TotalForceDir *= 2f;
+        }
         
-        Vector3 newHandPos = manager.GrappleHand.position + directionToPlayer * 2;
-        manager.GrappleHand.position = newHandPos;
+        // 6. Apply the final flattened, dampened force
+        manager.rb.AddForce(TotalForceDir * Time.deltaTime, ForceMode.Force);
     }
 }

@@ -34,8 +34,11 @@ namespace JL.Splitting
             if (targetMesh.isReadable == false)
                 throw new Exception($"Mesh \"{targetMesh.name}\" is not readable. Read/Write must be enabled in the import settings to perform splitting.");
 
-            if (meshesBeingSplit.Contains(targetMesh)) return null;
+            // Change this line:
+            // // if (meshesBeingSplit.Contains(targetMesh)) return null;
 
+            // To this:
+            if (objectsBeingSplit.Contains(meshFilter)) return null;
             AllocateMemory(meshFilter.transform, meshFilter.sharedMesh, slicePlane);
 
             CalculateWorldPositions();
@@ -69,8 +72,8 @@ namespace JL.Splitting
             if (targetMesh.isReadable == false)
                 throw new Exception($"Mesh \"{targetMesh.name}\" is not readable. Read/Write must be enabled in the import settings to perform splitting.");
 
-            if (meshesBeingSplit.Contains(targetMesh)) return;
-            meshesBeingSplit.Add(targetMesh);
+            if (objectsBeingSplit.Contains(meshFilter)) return;
+            objectsBeingSplit.Add(meshFilter);
 
             AllocateMemory(meshFilter.transform, meshFilter.sharedMesh, slicePlane);
 
@@ -106,7 +109,7 @@ namespace JL.Splitting
                 }
                 finally
                 {
-                    meshesBeingSplit.Remove(targetMesh);
+                    objectsBeingSplit.Remove(meshFilter);
                 }
             }
         }

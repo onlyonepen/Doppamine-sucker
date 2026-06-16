@@ -13,7 +13,9 @@ public class ThrowGrappleState : PlayerState
     public override void OnStateEnter(PlayerStateManager gamestateManager)
     {
         base.OnStateEnter(gamestateManager);
-
+        
+        if (!manager.canGrapple) manager.ChangeState(manager.BaseState);
+        
         manager.PBM.enabled = true;
 
         grappleCastHit = manager.GrapplePrediction();
@@ -37,7 +39,6 @@ public class ThrowGrappleState : PlayerState
     {
         base.OnStateUpdate();
 
-        Debug.unityLogger.Log(manager.RUD.GrapplePoint);
         manager.GuntipPointToGrapple();
 
         float elapsed = Time.time - stateEnterTime;
@@ -107,8 +108,5 @@ public class ThrowGrappleState : PlayerState
 
             manager.GrappleLr.SetPosition(i, pos);
         }
-
-        // Assigning the hand position to follow the end of the line renderer
-        manager. GrappleHand.position = currentTipPos;
     }
 }

@@ -16,8 +16,11 @@ namespace JL.Splitting
         /// A buffer that holds the meshes which are being split. 
         /// This ensures that a MeshSplitter can't split a mesh that is already being split.
         /// </summary>
-        protected static HashSet<Mesh> meshesBeingSplit = new HashSet<Mesh>();
 
+        protected static HashSet<Component> objectsBeingSplit = new HashSet<Component>();
+        
+        protected static readonly object triangulationLock = new object();
+        
         protected FList<int> trisPos, trisNeg;
         protected FList<VertexEdge> newEdges;
 
@@ -635,7 +638,22 @@ namespace JL.Splitting
             List<int>[] triangulatedCaps = new List<int>[flatCapPoints.Length];
             for (int i = 0; i < flatCapPoints.Length; i++)
             {
-                triangulatedCaps[i] = Triangulator.TriangulatePolygon(flatCapPoints[i]);
+                try 
+                {
+                    // FIX 1: Force threads to wait their turn to use the static Triangulator memory
+                    lock (triangulationLock)
+                    {
+                        triangulatedCaps[i] = Triangulator.TriangulatePolygon(flatCapPoints[i]);
+                    }
+                }
+                catch (System.Exception e)
+                {
+                    // FIX 2: BYPASS THE ERROR
+                    // If the math fails on complex/concave geometry, catch it.
+                    // We assign an empty list so it doesn't break the array, and just move on.
+                    UnityEngine.Debug.LogWarning("Swingscape: Skipped cap generation for a complex mesh to prevent a crash.");
+                    triangulatedCaps[i] = new List<int>();
+                }
             }
 
             return triangulatedCaps;

@@ -21,16 +21,21 @@ namespace Script.Enemy
         
         //test
         [SerializeField] private Splittable splittable;
-        [SerializeField] private Transform _planeTransform; 
 
         public IEnemyStateFactory stateFactory { get; private set; }
         private EnemyBaseState currentState;
+
+        [HideInInspector] public bool Iskilled = false;
+
+        private Collider col;
         
         private void Start()
         {
             stateFactory = CreateFactory(Type);
             currentState = stateFactory.CreateIdleState(this);
             currentState.OnStateEnter();
+            
+            col =  GetComponent<Collider>();
         }
 
         public void ChangeState(EnemyBaseState nextState)
@@ -50,21 +55,30 @@ namespace Script.Enemy
             ChangeState(stateFactory.CreateStaggerState(this));
         }
         
-        public void SplitDeath()
+        public void SplitDeath(Transform plane)
         {
-            Death();
-            SplitObject();
+            // 1. Make the enemy untargetable immediately so the player can't hit it again.
+            // (This ensures our new OverlapBox cast won't catch it while it's asynchronously splitting)
+            if (TryGetComponent<Collider>(out var col))
+            {
+                col.enabled = false;
+            }
+
+            // 2. Start the split. We will call Death() AFTER the split finishes.
+            SplitObject(plane);
         }
 
         public void Death()
         {
-            //StartCoroutine(delayHitstop(0.05f));
             DeathParticles.transform.parent = null;
             DeathParticles.Play();
             ChangeState(stateFactory.CreateStaggerState(this));
-            enabled = false;
             GlobalReference.Instance.player.currentEnergy = GlobalReference.Instance.player.MaxEnergy;
+    
+            // 2. Disable the entire GameObject (replaces this.enabled = false;)
+            gameObject.SetActive(false); 
         }
+
 
         private IEnemyStateFactory CreateFactory(EnemyType type)
         {
@@ -85,21 +99,44 @@ namespace Script.Enemy
             staggerTime = time;
             ChangeState(stateFactory.CreateStaggerState(this));
         }
-        public void SplitObject()
+        public void SplitObject(Transform _plane)
         {
             ChangeState(stateFactory.CreateStaggerState(this));
-            PointPlane plane = new PointPlane(_planeTransform.position, _planeTransform.rotation);
+            PointPlane plane = new PointPlane(_plane.position, _plane.rotation);
+    
+            float splitForce = 15f; 
+            Vector3 originalLinearVel = rb.linearVelocity; 
+            Vector3 originalAngularVel = rb.angularVelocity;
+
             splittable.SplitAsync(plane, (SplitResult result) =>
             {
-                result.posObject.AddComponent<Rigidbody>();
-                result.negObject.AddComponent<Rigidbody>();
+                Rigidbody r1 = result.posObject.AddComponent<Rigidbody>();
+                Rigidbody r2 = result.negObject.AddComponent<Rigidbody>();
+
+                r1.linearVelocity = originalLinearVel;
+                r1.angularVelocity = originalAngularVel;
+
+                r2.linearVelocity = originalLinearVel;
+                r2.angularVelocity = originalAngularVel;
+
+                r1.AddForce(plane.normal * splitForce, ForceMode.Impulse);
+                r2.AddForce(-plane.normal * splitForce, ForceMode.Impulse);
+
+                result.posObject.transform.parent = null;
+                result.negObject.transform.parent = null;
+
+                // 3. Start a short Coroutine to finish the death sequence safely
+                StartCoroutine(WaitAndDie());
             });
-            splittable.SplitAsync(plane);
         }
-        IEnumerator delayHitstop(float time)
+        private IEnumerator WaitAndDie()
         {
-            yield return new WaitForSeconds(time);
-            HitStopUtil.Instance.TriggerGlobalHitStop(0.3f);
+            // The Splittable plugin requires exactly 1 frame to run its "ResetCenterOfMassNextFrame" coroutine.
+            // We yield twice just to be absolutely safe before disabling the parent GameObject.
+            yield return null;
+            yield return null;
+    
+            Death();
         }
 
         private void OnDrawGizmosSelected()

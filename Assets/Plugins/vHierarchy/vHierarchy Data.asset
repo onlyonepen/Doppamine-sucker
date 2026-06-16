@@ -103,6 +103,13 @@ MonoBehaviour:
         - globalObjectIdString: GlobalObjectId_V1-2-8e65e087d79bf2d4da3ce333746f3d0b-1284863255-0
         - globalObjectIdString: GlobalObjectId_V1-2-8e65e087d79bf2d4da3ce333746f3d0b-1366218843-0
         - globalObjectIdString: GlobalObjectId_V1-2-8e65e087d79bf2d4da3ce333746f3d0b-152004936-0
+        - globalObjectIdString: GlobalObjectId_V1-2-8e65e087d79bf2d4da3ce333746f3d0b-1058089089-0
+        - globalObjectIdString: GlobalObjectId_V1-2-8e65e087d79bf2d4da3ce333746f3d0b-1406997976-0
+        - globalObjectIdString: GlobalObjectId_V1-2-8e65e087d79bf2d4da3ce333746f3d0b-1505521922-0
+        - globalObjectIdString: GlobalObjectId_V1-2-8e65e087d79bf2d4da3ce333746f3d0b-872537878-0
+        - globalObjectIdString: GlobalObjectId_V1-2-8e65e087d79bf2d4da3ce333746f3d0b-982035502-0
+        - globalObjectIdString: GlobalObjectId_V1-2-8e65e087d79bf2d4da3ce333746f3d0b-1201397566-0
+        - globalObjectIdString: GlobalObjectId_V1-2-8e65e087d79bf2d4da3ce333746f3d0b-647324589-0
         values:
         - colorIndex: 2
           iconNameOrGuid: AvatarMask On Icon
@@ -130,6 +137,34 @@ MonoBehaviour:
           isColorRecursive: 0
         - colorIndex: 0
           iconNameOrGuid: Terrain Icon
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 0
+          iconNameOrGuid: Terrain Icon
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 0
+          iconNameOrGuid: AvatarMask On Icon
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 0
+          iconNameOrGuid: Terrain Icon
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 0
+          iconNameOrGuid: AvatarMask On Icon
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 0
+          iconNameOrGuid: BoxCollider Icon
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 0
+          iconNameOrGuid: Terrain Icon
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 0
+          iconNameOrGuid: AvatarMask On Icon
           isIconRecursive: 0
           isColorRecursive: 0
   bookmarks:

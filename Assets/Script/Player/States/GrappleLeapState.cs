@@ -4,13 +4,13 @@ public class GrappleLeapState : PlayerState
 {
     float enterTimeStamp;
     bool isExtraGravOn = false;
-
-    private float visualOffset = 0.25f;
-
+    
     public override void OnStateEnter(PlayerStateManager gamestateManager)
     {
         base.OnStateEnter(gamestateManager);
 
+        manager.playerHp.TurnOnInvulnerability();
+        
         enterTimeStamp = Time.time;
 
         manager.PBM.playerCanMove = false;
@@ -52,7 +52,6 @@ public class GrappleLeapState : PlayerState
         Vector3 dirToPlayer = (manager.transform.position - trueTarget).normalized;
         Vector3 visualTarget = trueTarget + (dirToPlayer * currentOffset);
 
-        manager.GrappleHand.position = visualTarget;
 
         AirControl();
 
@@ -72,6 +71,8 @@ public class GrappleLeapState : PlayerState
     public override void OnStateExit()
     {
         base.OnStateExit();
+
+        manager.playerHp.TurnOffInvulnerability();
 
         manager.GrappleLr.enabled = false;
         manager.GrappleLr.positionCount = 2;

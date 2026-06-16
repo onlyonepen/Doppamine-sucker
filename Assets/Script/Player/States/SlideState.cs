@@ -2,18 +2,19 @@ using UnityEngine;
 
 public class SlideState : PlayerState
 {
-
     Vector3 SlideDir;
+    Vector3 originalCamPos; // Added to track camera height
 
     public override void OnStateEnter(PlayerStateManager gamestateManager)
     {
         base.OnStateEnter(gamestateManager);
         manager.PBM.playerCanMove = false;
 
-        //Transform child = manager.transform.GetChild(0);
-        //child.SetParent(null); // Unparent
-        manager.transform.localScale = new Vector3(1, .5f, 1); // Scale parent
-        //child.SetParent(manager.transform);
+        // Store the original camera position so we don't permanently shift it
+        originalCamPos = manager.Cam.transform.localPosition;
+        
+        // Snap the camera down visually (adjust the 0.8f up or down to change slide depth)
+        manager.Cam.transform.localPosition = new Vector3(originalCamPos.x, originalCamPos.y - 0.8f, originalCamPos.z);
 
         manager.GuntipDefault();
     }
@@ -38,10 +39,8 @@ public class SlideState : PlayerState
     {
         base.OnStateExit();
 
-        //Transform child = manager.transform.getc(0);
-        //child.SetParent(null); // Unparent
-        manager.transform.localScale = Vector3.one; // Scale parent
-        //child.SetParent(manager.transform);
+        // Safely snap the camera back up to its original height
+        manager.Cam.transform.localPosition = originalCamPos; 
     }
 
     private void SlideLogic()

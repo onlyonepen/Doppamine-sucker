@@ -23,7 +23,7 @@ namespace JL.Splitting
         [System.Diagnostics.Conditional("UNITY_EDITOR")]
         public static void LogError(object message)
         {
-            Debug.LogError(message);
+            //Debug.LogError(message);
         }
 
         [System.Diagnostics.Conditional("UNITY_EDITOR")]

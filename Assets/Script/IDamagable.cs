@@ -2,5 +2,5 @@ using UnityEngine;
 
 public interface IDamagable
 {
-    public void SplitDeath();
+    public void SplitDeath(Transform plane);
 }

@@ -51,8 +51,8 @@ namespace JL.Splitting
             if (meshRenderer.sharedMesh.isReadable == false)
                 throw new Exception($"Mesh \"{meshRenderer.sharedMesh.name}\" is not readable. Read/Write must be enabled in the import settings to perform splitting.");
 
-            if (meshesBeingSplit.Contains(targetMesh)) return null;
-
+            if (objectsBeingSplit.Contains(meshRenderer)) return null;
+            
             AllocateMemorySkinned(meshRenderer.transform, meshRenderer, slicePlane);
 
             CalculateWorldPositionsSkinned();
@@ -86,8 +86,8 @@ namespace JL.Splitting
             if (meshRenderer.sharedMesh.isReadable == false)
                 throw new Exception($"Mesh \"{meshRenderer.sharedMesh.name}\" is not readable. Read/Write must be enabled in the import settings to perform splitting.");
 
-            if (meshesBeingSplit.Contains(targetMesh)) return;
-            meshesBeingSplit.Add(targetMesh);
+            if (objectsBeingSplit.Contains(meshRenderer)) return;
+            objectsBeingSplit.Add(meshRenderer);
 
             AllocateMemorySkinned(meshRenderer.transform, meshRenderer, slicePlane);
             CalculateBoneSides(); //can't be done async because of get_position;
@@ -124,7 +124,8 @@ namespace JL.Splitting
                 }
                 finally
                 {
-                    meshesBeingSplit.Remove(targetMesh);
+                    objectsBeingSplit.Remove(meshRenderer);
+                    
                 }
             }
         }

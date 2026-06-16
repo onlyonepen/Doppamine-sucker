@@ -13,12 +13,12 @@ TagManager:
   - UI
   - Ground
   - 
-  - Pullale object
+  - SplittableObject
   - AttackArea
   - LightEnemy
   - HeavyEnemy
   - Parriable
-  - EnemyMesh
+  - EnemyRemain
   - 
   - 
   - 

@@ -16,7 +16,7 @@ public class HitStopUtil : MonoBehaviour
             return;
         }
         Instance = this;
-        DontDestroyOnLoad(gameObject);
+        DontDestroyOnLoad(transform.parent.gameObject);
     }
 
     private void OnDestroy()

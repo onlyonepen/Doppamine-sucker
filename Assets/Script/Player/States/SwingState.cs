@@ -88,7 +88,6 @@ public class SwingState : PlayerState
         Vector3 dirToPlayer = (manager.transform.position - trueTarget).normalized;
         Vector3 visualTarget = trueTarget + (dirToPlayer * currentOffset);
 
-        manager.GrappleHand.position = visualTarget;
         manager.GrappleLr.SetPosition(1, visualTarget);
 
         // Inputs & State Changes

@@ -6,7 +6,7 @@ public class PlayerBaseMovement : MonoBehaviour
 
     #region seralize
     [Header("seralize")]
-    [SerializeField] private Collider _col;
+    public Collider _col;
     [SerializeField] private LayerMask GroundLayer;
     #endregion
 
@@ -358,19 +358,30 @@ public class PlayerBaseMovement : MonoBehaviour
 
     private void Crouch()
     {
+        // Calculate how much the scale is changing
+        // Note: If you are using a standard Unity Capsule (which is 2 units tall), 
+        // the bottom moves exactly by the difference in scale. 
+        // If your character model is 1 unit tall, you would divide this by 2f.
+        float heightDifference = originalScale.y - crouchHeight; 
+
         if (isCrouched)
         {
             transform.localScale = new Vector3(originalScale.x, originalScale.y, originalScale.z);
+        
+            // Push the player up so the expanding collider doesn't clip into the floor
+            transform.position += new Vector3(0, heightDifference, 0);
+        
             walkSpeed /= speedReduction;
-
             isCrouched = false;
         }
-
         else
         {
             transform.localScale = new Vector3(originalScale.x, crouchHeight, originalScale.z);
+        
+            // Push the player down so they don't float momentarily after shrinking
+            transform.position -= new Vector3(0, heightDifference, 0);
+        
             walkSpeed *= speedReduction;
-
             isCrouched = true;
         }
     }

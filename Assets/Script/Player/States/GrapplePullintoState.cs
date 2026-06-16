@@ -10,11 +10,11 @@ public class GrapplePullintoState : PlayerState
     private bool grappleEnemy;
     private BaseEmemy enemy;
     
-    private float visualOffset = 1.5f;
-
     public override void OnStateEnter(PlayerStateManager gamestateManager)
     {
         base.OnStateEnter(gamestateManager);
+        
+        manager.playerHp.TurnOnInvulnerability();
         
         manager.PBM.playerCanMove = false;
         manager.PBM.FloatingCapsuleActive = false;
@@ -27,6 +27,7 @@ public class GrapplePullintoState : PlayerState
         
         initialPlayerPosition = manager.transform.position;
         initialEnemyDistance = Vector3.Distance(initialPlayerPosition, manager.RUD.GrappledObject.transform.position);
+        expectedDuration = initialEnemyDistance / manager.PullIntoSpeed;
         
         if (manager.RUD.GrappledObject.TryGetComponent<BaseEmemy>( out var component))
         {
@@ -35,7 +36,6 @@ public class GrapplePullintoState : PlayerState
             enemy = component;
         }
         
-        expectedDuration = initialEnemyDistance / manager.PullIntoSpeed;
 
         Vector3 pullDirection = (manager.RUD.GrappledObject.transform.position - initialPlayerPosition).normalized;
         manager.rb.linearVelocity = pullDirection * manager.PullIntoSpeed;
@@ -62,9 +62,7 @@ public class GrapplePullintoState : PlayerState
 
         Vector3 dirToPlayer = (manager.transform.position - trueTarget).normalized;
         Vector3 visualPos = trueTarget + (dirToPlayer * currentOffset);
-
-        manager.GrappleHand.position = visualPos;
-
+        
         float elapsed = Time.time - stateEnterTime;
         float percent = expectedDuration > 0 ? Mathf.Clamp01(elapsed / expectedDuration) : 1f;
         
@@ -74,7 +72,7 @@ public class GrapplePullintoState : PlayerState
         {
             if (manager.RUD.GrappledObject.TryGetComponent<IDamagable>(out var component)) 
             {
-                component.SplitDeath();
+                //component.SplitDeath();
             }
         }
 
@@ -91,6 +89,8 @@ public class GrapplePullintoState : PlayerState
     public override void OnStateExit()
     {
         base.OnStateExit();
+        
+        manager.playerHp.TurnOffInvulnerability();
 
         manager.GrappleLr.enabled = false;
         manager.GrappleLr.positionCount = 2;
@@ -98,9 +98,9 @@ public class GrapplePullintoState : PlayerState
         manager.PBM.FloatingCapsuleActive = true;
 
         Vector3 pullDirection = (manager.RUD.GrappledObject.transform.position - initialPlayerPosition).normalized;
-        manager.rb.linearVelocity = pullDirection * manager.PullIntoSpeed;
+        manager.rb.linearVelocity = pullDirection * manager.PullIntoSpeed * 0.8f;
         
-        if(grappleEnemy) enemy.SplitDeath();
+        //if(grappleEnemy) enemy.SplitDeath();
     }
 
     private void PullIn(float percent)
