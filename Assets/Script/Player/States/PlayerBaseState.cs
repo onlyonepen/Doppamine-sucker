@@ -35,7 +35,8 @@ public class PlayerBaseState : PlayerState
         MantleCheck();
         SlideCheck();
         
-        //if(!manager.PBM.isGrounded) AirControl();
+        if(!manager.PBM.isGrounded) manager.footstepManager.SetFootstepsEnabled(false);
+        else  manager.footstepManager.SetFootstepsEnabled(true);
         
         if (Input.GetMouseButtonDown(1) && manager.UseEnergy(manager.InitialThrowUsage))
         {

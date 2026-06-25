@@ -11,13 +11,21 @@ public class GlobalReference : MonoBehaviour
     public static GlobalReference Instance { get; private set; }
     private void Awake()
     {
+        // 2. Proper Singleton check
         if (Instance != null && Instance != this)
         {
-            Destroy(this);
+            Destroy(gameObject); // Destroy the entire duplicate GameObject, not just the script
+            return; // CRITICAL: Stop executing the rest of Awake
         }
-        else
+        
+        Instance = this;
+    }
+    
+    private void OnDestroy()
+    {
+        if (Instance == this)
         {
-            Instance = this;
+            Instance = null; 
         }
     }
 }

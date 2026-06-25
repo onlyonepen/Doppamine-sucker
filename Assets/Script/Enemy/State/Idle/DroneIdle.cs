@@ -7,7 +7,7 @@ namespace Script.Enemy.State.Idle
         private float detectionValue;
         private float toAggroTime = 1f;
         
-        public DroneIdle(BaseEmemy enemy)
+        public DroneIdle(BaseEnemy enemy)
         {
             Enemy = enemy;
         }
@@ -45,16 +45,13 @@ namespace Script.Enemy.State.Idle
     
             bool seePLayer = false;
 
-            Debug.Log("0");
             // Cast the ray against BOTH the terrain and the player
             if (Physics.Raycast(Enemy.transform.position, toPlayer, out RaycastHit hit, playerDist + 5f, playerAndGround))
             {
-                Debug.Log("1");
                 // If the very first object the ray hits is the player, they have line of sight!
                 // If it hits a wall first, this remains false.
                 if (((1 << hit.collider.gameObject.layer) & GlobalReference.Instance.playerLayer) != 0)
                 {
-                    Debug.Log("2");
                     seePLayer = true;
                 }
             }

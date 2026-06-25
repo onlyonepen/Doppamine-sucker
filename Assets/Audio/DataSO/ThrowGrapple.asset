@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff9dacde2eff80c4bba0e600c361f47f, type: 3}
+  m_Name: ThrowGrapple
+  m_EditorClassIdentifier: Assembly-CSharp::AudioDataSO
+  audioName: ThrowGrapple
+  clip: {fileID: 8300000, guid: 28add8c3ef5d90241bf2eacf5b2f1a09, type: 3}
+  volume: 0.637
+  pitch: 1
+  spatialBlend: 1

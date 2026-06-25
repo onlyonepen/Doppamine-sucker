@@ -9,7 +9,7 @@ public class BasicEnemyProjectile : MonoBehaviour , IParriable
         public float lifetime = 10f;
         private float spawnTimeStamp;
 
-        [HideInInspector]public BaseEmemy ProjectileOwner;
+        [HideInInspector]public BaseEnemy ProjectileOwner;
         private bool parried = false;
         
         private void OnEnable()

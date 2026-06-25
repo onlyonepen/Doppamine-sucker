@@ -9,7 +9,7 @@ namespace Script.Enemy.State.Attack
         private float Anticipation = 1.5f;
         private float Recovery = 0.2f;
         
-        public DroneSpreadShot(BaseEmemy enemy)
+        public DroneSpreadShot(BaseEnemy enemy)
         {
             Enemy = enemy;
         }

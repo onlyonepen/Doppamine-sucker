@@ -26,6 +26,7 @@ public class WallRunningState : PlayerState
     public override void OnStateUpdate()
     {
         base.OnStateUpdate();
+        manager.footstepManager.SetFootstepsEnabled(true);
 
         WallRunCheck();
         if (wallLeft) rotateTween = manager.SideRotateJoint.DOLocalRotate(new Vector3(0, 0, -15f), 0.5f);
@@ -43,6 +44,7 @@ public class WallRunningState : PlayerState
     public override void OnStateExit()
     {
         base.OnStateExit();
+        manager.footstepManager.SetFootstepsEnabled(false);
         manager.rb.useGravity = true;
 
         rotateTween.Kill();
@@ -103,7 +105,9 @@ public class WallRunningState : PlayerState
         wallRight = Physics.Raycast(manager.transform.position, manager.Cam.transform.right, out rightWallHit, manager.WallCheckDistance, manager.TerrainLayer);
         wallLeft = Physics.Raycast(manager.transform.position, -manager.Cam.transform.right, out leftWallHit, manager.WallCheckDistance, manager.TerrainLayer);
         bool grounded = Physics.Raycast(manager.transform.position, Vector3.down, manager.GroundCheckDistance, LayerMask.GetMask("Ground"));
-
+        
+        grounded = false;//overwrite no ground can cancel out
+        
         if(grounded || (!wallLeft && !wallRight))
         {
             manager.ChangeState(manager.BaseState);

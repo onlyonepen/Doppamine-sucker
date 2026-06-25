@@ -9,8 +9,10 @@ namespace Script.Enemy.State.Attack
         
         private float Anticipation = 1f;
         private float Recovery = .2f;
+        
+        private AudioSource ChargeUpSound;
 
-        public DroneAttack(BaseEmemy enemy)
+        public DroneAttack(BaseEnemy enemy)
         {
             Enemy = enemy;
         }
@@ -21,6 +23,8 @@ namespace Script.Enemy.State.Attack
             shoted = false;
             Enemy.rb.constraints =  RigidbodyConstraints.FreezePosition;
             Enemy.ChargeUpParticles.Play();
+            
+            ChargeUpSound = AudioManager.Instance.PlayAudioByName("DroneCharge", Enemy.transform.position);
         }
 
         public override void OnStateUpdate()
@@ -50,6 +54,8 @@ namespace Script.Enemy.State.Attack
             GameObject bullet = GameObject.Instantiate(Enemy.ProjectilePrefab, Enemy.Guntip.position, Enemy.Guntip.rotation);
             bullet.GetComponent<BasicEnemyProjectile>().ProjectileOwner = Enemy;
             Enemy.ChargeUpParticles.Stop();
+            ChargeUpSound.Stop();
+            AudioManager.Instance.PlayAudioByName("DroneShot", Enemy.transform.position);
         }
 
         private void LookAtPlayer()

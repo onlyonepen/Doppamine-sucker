@@ -14,7 +14,13 @@ public class ThrowGrappleState : PlayerState
     {
         base.OnStateEnter(gamestateManager);
         
-        if (!manager.canGrapple) manager.ChangeState(manager.BaseState);
+        if (!manager.canGrapple)
+        {
+            manager.ChangeState(manager.BaseState);
+            return;
+        }
+        
+        AudioManager.Instance.PlayAudioByName("ThrowGrapple", manager.transform.position, true);
         
         manager.PBM.enabled = true;
 

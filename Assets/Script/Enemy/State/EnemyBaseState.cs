@@ -5,7 +5,7 @@ namespace Script.Enemy.State
 {
     public abstract class EnemyBaseState
     {
-        protected BaseEmemy Enemy;
+        protected BaseEnemy Enemy;
         protected float StateEnterTime;
         
 

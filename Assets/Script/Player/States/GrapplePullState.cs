@@ -17,7 +17,7 @@ public class GrapplePullState : PlayerState
     Vector3 initialObjPos;
 
     bool grappleEnemy = false;
-    private BaseEmemy enemy;
+    private BaseEnemy enemy;
 
     public override void OnStateEnter(PlayerStateManager gamestateManager)
     {
@@ -40,9 +40,9 @@ public class GrapplePullState : PlayerState
         
         initialPlayerPosition = manager.transform.position;
         initialEnemyDistance = Vector3.Distance(initialPlayerPosition, manager.RUD.GrappledObject.transform.position);
-        expectedDuration = initialEnemyDistance / 50;
+        expectedDuration = initialEnemyDistance / 40;
 
-        if (grappledObj.TryGetComponent<BaseEmemy>( out var component))
+        if (grappledObj.TryGetComponent<BaseEnemy>( out var component))
         {
             component.GetPull();
             grappleEnemy = true;

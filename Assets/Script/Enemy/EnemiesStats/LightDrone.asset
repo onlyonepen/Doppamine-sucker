@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Script.Enemy.EnemiesStats.EnemyStatSO
   DetectionRange: 100
   MoveSpeed: 13
-  AttackFrequentcy: 2
+  AttackFrequentcy: 1

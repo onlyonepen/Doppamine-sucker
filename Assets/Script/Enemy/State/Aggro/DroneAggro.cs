@@ -16,7 +16,7 @@ namespace Script.Enemy.State.Aggro
 
         private float NextAttackTime;
         
-        public DroneAggro(BaseEmemy enemy)
+        public DroneAggro(BaseEnemy enemy)
         {
             Enemy = enemy;
         }

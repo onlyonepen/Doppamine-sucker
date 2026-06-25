@@ -5036,7 +5036,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Script.Enemy.BaseEmemy
   Type: 1
-  Stat: {fileID: 11400000, guid: c0f0367a6a0da834d87bbd7b92caec50, type: 2}
+  Stat: {fileID: 11400000, guid: 62c2a141c6b87cb4bb9c6eb324c7180d, type: 2}
   rb: {fileID: 8710716384500399953}
   DeathParticles: {fileID: 8267086540657242156}
   Guntip: {fileID: 6579019304189468217}

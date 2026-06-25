@@ -5,9 +5,7 @@ using VInspector; // Assuming you are using this for the [Button] attribute
 
 public class SlidingDoors : MonoBehaviour
 {
-    public Transform NextLevel;
-    public Transform AllEnemyParent;
-    
+    public AudioSource doorSound;
     [Header("Door References")]
     public Transform leftDoor;
     public Transform rightDoor;
@@ -20,10 +18,6 @@ public class SlidingDoors : MonoBehaviour
     private Vector3 rightClosedPos;
     private Vector3 leftOpenPos;
     private Vector3 rightOpenPos;
-
-    private bool isOpening = false;
-
-    public GameObject[] FloorEnemies;
     
     void Start()
     {
@@ -32,46 +26,28 @@ public class SlidingDoors : MonoBehaviour
         
         leftOpenPos = leftClosedPos + (Vector3.forward * openDistance);
         rightOpenPos = rightClosedPos + (Vector3.back * openDistance);
-
-        List<GameObject> childList = new List<GameObject>();
-        foreach (Transform child in AllEnemyParent)
-        {
-            childList.Add(child.gameObject);
-        }
-        FloorEnemies = childList.ToArray();
-    }
-
-    void Update()
-    {
-        // We no longer need to constantly Lerp the doors here!
-        // We only use Update to check if the enemies are cleared.
-        
-        if (!isOpening)
-        {
-            bool HasEnemyLeft = false;
-            foreach (GameObject obj in FloorEnemies)
-            {
-                if (obj.activeInHierarchy) HasEnemyLeft = true;
-            }
-            if(!HasEnemyLeft) NextFloor();
-        }
     }
 
     [Button]
-    public void NextFloor()
+    public void PlaySoundd()
     {
-        // Prevent this from triggering multiple times if NextFloor() is called repeatedly
-        if (isOpening) return; 
-        
-        isOpening = true;
-        NextLevel.gameObject.SetActive(true);
+        doorSound.Play();
+    }
 
-        // Duration-based movement using DOTween
-        // SetEase(Ease.InOutSine) gives it a nice smooth start and stop.
-        leftDoor.DOLocalMove(leftOpenPos, openDuration).SetEase(Ease.InOutSine);
-        rightDoor.DOLocalMove(rightOpenPos, openDuration).SetEase(Ease.InOutSine);
-        
-        // You can easily sync your camera shake duration to the door duration now!
-        GlobalReference.Instance.player.camController.transform.DOShakePosition(openDuration,0.5f,50);
+    [Button]
+    public void OpenDoor(bool skipAnim = false)
+    {
+        if (skipAnim)
+        {
+            leftDoor.localPosition = leftOpenPos;
+            rightDoor.localPosition = rightOpenPos;
+        }
+        else
+        {
+            leftDoor.DOLocalMove(leftOpenPos, openDuration).SetEase(Ease.InOutSine);
+            rightDoor.DOLocalMove(rightOpenPos, openDuration).SetEase(Ease.InOutSine);
+            GlobalReference.Instance.player.camController.transform.DOShakePosition(openDuration,0.5f,50);
+            doorSound.Play();
+        }
     }
 }

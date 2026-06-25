@@ -98,54 +98,75 @@ public class PlayerAttacking : MonoBehaviour
         
         nextStateMethod.Invoke();
     }
-    
-    // --- UPDATED: Continuous Scanning Coroutine ---
+    // --- UPDATED: Continuous Scanning & Caching Coroutine ---
     private IEnumerator DelayedExecuteAttack(Transform activePlane, float delayTime)
     {
         float timer = 0f;
         bool slowMoTriggered = false;
+        
+        // NEW: The Cache. We will store targets here the exact moment we see them.
+        HashSet<GameObject> lockedTargets = new HashSet<GameObject>();
 
         // Loop every frame until our visual wind-up delay is reached
+        string audioToPlay = "Melee";
         while (timer < delayTime)
         {
-            // If we haven't triggered slow-mo yet, keep scanning the hitbox!
-            if (!slowMoTriggered && attackArea != null)
+            if (attackArea != null)
             {
                 GameObject[] earlyTargets = attackArea.GetTargetsInSwing();
                 
-                // The moment an enemy gets pulled into the hitbox during the wind-up, drop time!
                 if (earlyTargets != null && earlyTargets.Length > 0)
                 {
-                    Time.timeScale = 0.5f; 
-                    slowMoTriggered = true;
+                    // The moment an enemy gets pulled into the hitbox, drop time!
+                    if (!slowMoTriggered)
+                    {
+                        Time.timeScale = 0.5f; 
+                        slowMoTriggered = true;
+                    }
+                    
+                    // Lock them in! Even if you slide past them before the swing finishes, they are marked for the cut.
+                    foreach (GameObject target in earlyTargets)
+                    {
+                        if (target != null) lockedTargets.Add(target);
+                    }
                 }
             }
-
-            // Because we use Time.deltaTime, the moment timeScale drops to 0.35, 
-            // this timer slows down with it. This ensures the code delay 
-            // stretches perfectly alongside your slow-mo Animator!
-            timer += Time.deltaTime;
             
-            // Wait for the next frame
+            if (slowMoTriggered) audioToPlay = "MeleeHit";
+
+            timer += Time.deltaTime;
             yield return null; 
         }
+        AudioManager.Instance.PlayAudioByName(audioToPlay, transform.position, true);
         
-        // The wind-up is over, and the sword has visually connected. Fire the cut!
-        ExecuteHitboxLogic(activePlane);
-        yield return new WaitForSeconds(0.02f);
+        // ONE FINAL CHECK: Catch anyone who entered the hitbox on the exact execution frame
+        if (attackArea != null)
+        {
+            GameObject[] finalTargets = attackArea.GetTargetsInSwing();
+            if (finalTargets != null && finalTargets.Length > 0)
+            {
+                foreach (GameObject target in finalTargets)
+                {
+                    if (target != null) lockedTargets.Add(target);
+                }
+                
+                // If we somehow hit someone without triggering slow-mo yet, trigger it now for the impact!
+                if (!slowMoTriggered) Time.timeScale = 0.5f;
+            }
+        }
+
+        // The wind-up is over. Pass the locked targets to the hitbox logic!
+        ExecuteHitboxLogic(activePlane, lockedTargets);
+        
+        yield return new WaitForSecondsRealtime(0.05f); // Use realtime so the pause is consistent
         Time.timeScale = 1f;
     }
-    private void ExecuteHitboxLogic(Transform activePlane)
+
+    // --- UPDATED: Now receives the locked targets ---
+    private void ExecuteHitboxLogic(Transform activePlane, HashSet<GameObject> targetsToProcess)
     {
-        // Safety check for the attack area script itself
-        if (attackArea == null) return;
-
-        // Fire the instantaneous OverlapBox cast to get our targets right NOW
-        GameObject[] targetsToProcess = attackArea.GetTargetsInSwing();
-
-        // If the enemy dodged or the player turned the camera away during the delay,
-        // snap time back to normal and abort the hit logic.
-        if (targetsToProcess == null || targetsToProcess.Length == 0)
+        // If the enemy dodged before the radar even caught them, snap time back to normal
+        if (targetsToProcess == null || targetsToProcess.Count == 0)
         {
             Time.timeScale = 1f;
             return;
@@ -154,13 +175,11 @@ public class PlayerAttacking : MonoBehaviour
         int parriableLayer = LayerMask.NameToLayer("Parriable");
         LayerMask splitAndDamagable = LayerMask.GetMask("SplittableObject") | GlobalReference.Instance.EnemyLayer;
 
-        // We absolutely KEEP this HashSet! It is still crucial for preventing multiple 
-        // child colliders on the same enemy from triggering SplitDeath multiple times.
-        HashSet<IDamagable> hitTargets = new();
+        // Keep this internal HashSet to prevent multiple child colliders on the SAME enemy from triggering multiple cuts
+        HashSet<IDamagable> hitTargets = new HashSet<IDamagable>();
         
         foreach (GameObject obj in targetsToProcess)
         {
-            // GetTargetsInSwing() already filters out nulls, but keeping this is a good defensive habit
             if (obj == null) continue; 
     
             if (((1 << obj.layer) & splitAndDamagable) != 0)
@@ -170,8 +189,6 @@ public class PlayerAttacking : MonoBehaviour
                 if (damagable != null && hitTargets.Add(damagable))
                 {
                     damagable.SplitDeath(activePlane);
-                    // REMOVED: Time.timeScale = 0.35f; 
-                    // (It is now handled smoothly in the wind-up!)
                 }
             }
             else if (((1 << obj.layer) & parriableLayer) != 0)

@@ -1,9 +1,12 @@
 using DG.Tweening;
+using Script.Player.States;
 using UnityEngine;
+using UnityEngine.UI;
 using VInspector;
 
 public class PlayerStateManager : MonoBehaviour
 {
+    [ReadOnly] public string curreentState;
     [Header("Energy")]
     public bool useEnergy = true;
     public float MaxEnergy = 100f;
@@ -24,8 +27,8 @@ public class PlayerStateManager : MonoBehaviour
     public LayerMask TerrainLayer;
     public Transform feetTrans;
     public PlayerCameraController camController;
-    public PlayerAttackArea AttackArea;
     public PlayerHpManager playerHp;
+    public FootstepManager footstepManager;
     [Header("CameraFov")]
     public float minFov = 80f;
     public float maxFov = 100f;
@@ -64,7 +67,7 @@ public class PlayerStateManager : MonoBehaviour
     public LineRenderer GrappleLr;
     [Header("Swinging")]
     public float JointSpring = 4.5f;
-    public float JointDamper = 7f;
+    public float JointDamper = 7f; 
     public float JointMassScale = 4.5f;
     public float AirControlFwdForce = 600;
     public float AirControlHorizontalForce = 400;
@@ -77,6 +80,11 @@ public class PlayerStateManager : MonoBehaviour
 
     [HideInInspector] public bool canGrapple;
 
+    [Header("DiedState")]
+    public Image redScreenOverlay;
+    public float deathDuration = 1f;
+    public GameObject gameOverScreen;
+    
     #region states
 
     public PlayerState CurrentState;
@@ -91,6 +99,7 @@ public class PlayerStateManager : MonoBehaviour
     public PlayerState WallRunState = new WallRunningState();
     public PlayerState MantleState = new MantleState();
     public PlayerState SlideState = new SlideState();
+    public PlayerState DiedState = new DiedState();
 
     #endregion
 
@@ -127,6 +136,8 @@ public class PlayerStateManager : MonoBehaviour
     {
         CurrentState.OnStateTriggerEnter(other);
     }
+    
+    [Header("AimAssist")]
     public float minAimAssistRadius = 0.8f; 
     public float maxAimAssistRadius = 5.0f; 
 
@@ -139,7 +150,7 @@ public class PlayerStateManager : MonoBehaviour
         // --- 1. DIRECT RAYCAST ---
         RaycastHit directHitEnemy = new RaycastHit();
         bool foundDirectEnemy = false;
-        
+    
         RaycastHit directHitSwing = new RaycastHit();
         bool foundDirectSwing = false;
 
@@ -148,17 +159,17 @@ public class PlayerStateManager : MonoBehaviour
         {
             int hitLayer = 1 << tempDirect.collider.gameObject.layer;
 
-            // Is the direct hit an enemy?
-            if ((hitLayer & assistPriority) != 0)
-            {
-                directHitEnemy = tempDirect;
-                foundDirectEnemy = true;
-            }
-            // Is the direct hit terrain/swingable?
-            else if ((hitLayer & Swingable) != 0) 
+            // SWAPPED: Check if the direct hit is terrain/swingable FIRST
+            if ((hitLayer & Swingable) != 0) 
             {
                 directHitSwing = tempDirect;
                 foundDirectSwing = true;
+            }
+            // Then check if the direct hit is an enemy
+            else if ((hitLayer & assistPriority) != 0)
+            {
+                directHitEnemy = tempDirect;
+                foundDirectEnemy = true;
             }
         }
 
@@ -238,16 +249,16 @@ public class PlayerStateManager : MonoBehaviour
         RaycastHit finalHit = new RaycastHit();
         bool hasValidHit = false;
 
-        // 1. Enemy in Direct Raycast (Intentional Combat)
-        if (foundDirectEnemy)
-        {
-            finalHit = directHitEnemy;
-            hasValidHit = true;
-        }
-        // 2. Terrain in Direct Raycast (Intentional Traversal)
-        else if (foundDirectSwing)
+        // SWAPPED: 1. Terrain in Direct Raycast (Intentional Traversal)
+        if (foundDirectSwing)
         {
             finalHit = directHitSwing;
+            hasValidHit = true;
+        }
+        // SWAPPED: 2. Enemy in Direct Raycast (Intentional Combat)
+        else if (foundDirectEnemy)
+        {
+            finalHit = directHitEnemy;
             hasValidHit = true;
         }
         // 3. Enemy in Aim Assist (Forgiving Combat)
@@ -350,6 +361,7 @@ public abstract class PlayerState
     public virtual void OnStateEnter(PlayerStateManager gamestateManager)
     {
         manager = gamestateManager;
+        manager.curreentState = this.ToString();
         player = manager.gameObject;
         stateEnterTime = Time.time;
     }

@@ -114,7 +114,7 @@ public class SwingState : PlayerState
             {
                 Vector3 toplayer = manager.transform.position - GrapplePoint;
                 float playerAffectedWeight = 35;
-                manager.RUD.GrappledObject.GetComponent<BaseEmemy>().Stagger(2f);
+                manager.RUD.GrappledObject.GetComponent<BaseEnemy>().Stagger(2f);
                 manager.RUD.GrappledObject.GetComponent<Rigidbody>().AddForce(toplayer.normalized * playerAffectedWeight, ForceMode.Impulse);
             }
         }
