@@ -54,7 +54,7 @@ public class CheckpointManager : MonoBehaviour
 
         if (GameValue.ObtainedGrapple)
         {
-            GlobalReference.Instance.player.canGrapple = true;
+            GlobalReference.Instance.player.Locomotion.canGrapple = true;
         }
     }
 

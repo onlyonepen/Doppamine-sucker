@@ -3,7 +3,7 @@ using UnityEngine;
 public class GlobalReference : MonoBehaviour
 {
     //ChangeToStatic
-    public PlayerStateManager player;
+    public PlayerManager player;
     public LayerMask playerLayer;
     public LayerMask TerrainLayer;
     public LayerMask EnemyLayer;

@@ -8,6 +8,12 @@ public class HitStopUtil : MonoBehaviour
 
     private CancellationTokenSource _globalCts;
 
+    // The sustained time scale to return to after a momentary hit-stop (1 = normal,
+    // <1 = ongoing slow-mo such as the melee-impact effect). HitStopUtil is the single
+    // owner of Time.timeScale so overlapping effects can't leave it stuck.
+    private float _baseTimeScale = 1f;
+    private bool _globalHitStopActive = false;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -31,21 +37,35 @@ public class HitStopUtil : MonoBehaviour
         _ = ExecuteGlobalHitStop(durationSeconds, _globalCts.Token);
     }
 
+    /// <summary>Set a sustained time scale (e.g. combat slow-mo). Takes effect immediately
+    /// unless a momentary hit-stop is currently freezing time, in which case it applies
+    /// once that hit-stop ends.</summary>
+    public void SetBaseTimeScale(float scale)
+    {
+        _baseTimeScale = scale;
+        if (!_globalHitStopActive) Time.timeScale = scale;
+    }
+
+    /// <summary>Restore the sustained time scale to normal (1).</summary>
+    public void ResetBaseTimeScale() => SetBaseTimeScale(1f);
+
     private async Task ExecuteGlobalHitStop(float duration, CancellationToken token)
     {
+        _globalHitStopActive = true;
         Time.timeScale = 0f;
         float elapsed = 0f;
 
         while (elapsed < duration)
         {
             if (token.IsCancellationRequested) return;
-            
+
             // Must use unscaledDeltaTime because timeScale is 0
-            elapsed += Time.unscaledDeltaTime; 
+            elapsed += Time.unscaledDeltaTime;
             await Task.Yield();
         }
 
-        Time.timeScale = 1f;
+        _globalHitStopActive = false;
+        Time.timeScale = _baseTimeScale; // return to the sustained scale, not a hard 1
     }
 
     public void TriggerTargetedHitStop(GameObject target, float durationSeconds)
@@ -132,7 +152,8 @@ public class HitStopUtil : MonoBehaviour
             _globalCts.Cancel();
             _globalCts.Dispose();
             _globalCts = null;
-            Time.timeScale = 1f; // Force recovery
+            _globalHitStopActive = false;
+            Time.timeScale = _baseTimeScale; // Force recovery to the sustained scale
         }
     }
 }

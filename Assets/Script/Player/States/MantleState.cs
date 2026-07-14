@@ -9,7 +9,7 @@ public class MantleState : PlayerState
         manager.PBM.playerCanMove = false;
         manager.rb.linearVelocity = Vector3.zero;
 
-        manager.predictionPoint.gameObject.SetActive(false);
+        manager.Targeting.HidePredictionPoint();
 
         manager.transform.DOMove(manager.RUD.MantlePoint, 0.3f);
     }

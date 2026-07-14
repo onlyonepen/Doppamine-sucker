@@ -10,49 +10,26 @@ namespace Script.Enemy
 {
     public enum EnemyType { LightDrone, HeavyDrone }
     
-    public class LightDroneFactory : IEnemyStateFactory
+    /// <summary>
+    /// Shared base for all drone-family enemies.
+    /// Idle, Aggro, and Stagger are identical across variants — only Attack differs.
+    /// A new drone type only needs to override CreateAttackState.
+    /// </summary>
+    public abstract class DroneFactoryBase : IEnemyStateFactory
     {
-        public EnemyBaseState CreateIdleState(BaseEnemy enemy)
-        {
-            return new DroneIdle(enemy);
-        }
-
-        public EnemyBaseState CreateAggroState(BaseEnemy enemy)
-        {
-            return new DroneAggro(enemy);
-        }
-
-        public EnemyBaseState CreateAttackState(BaseEnemy enemy)
-        {
-            return new DroneAttack(enemy);
-        }
-
-        public EnemyBaseState CreateStaggerState(BaseEnemy enemy)
-        {
-            return new DroneStagger(enemy);
-        }
+        public EnemyBaseState CreateIdleState(BaseEnemy enemy)    => new DroneIdle(enemy);
+        public EnemyBaseState CreateAggroState(BaseEnemy enemy)   => new DroneAggro(enemy);
+        public EnemyBaseState CreateStaggerState(BaseEnemy enemy) => new DroneStagger(enemy);
+        public abstract EnemyBaseState CreateAttackState(BaseEnemy enemy);
     }
 
-    public class HeavyDroneFactory : IEnemyStateFactory
+    public class LightDroneFactory : DroneFactoryBase
     {
-        public EnemyBaseState CreateIdleState(BaseEnemy enemy)
-        {
-            return new DroneIdle(enemy);
-        }
+        public override EnemyBaseState CreateAttackState(BaseEnemy enemy) => new DroneAttack(enemy);
+    }
 
-        public EnemyBaseState CreateAggroState(BaseEnemy enemy)
-        {
-            return new DroneAggro(enemy);
-        }
-
-        public EnemyBaseState CreateAttackState(BaseEnemy enemy)
-        {
-            return new DroneSpreadShot(enemy);
-        }
-
-        public EnemyBaseState CreateStaggerState(BaseEnemy enemy)
-        {
-            return new DroneStagger(enemy);
-        }
+    public class HeavyDroneFactory : DroneFactoryBase
+    {
+        public override EnemyBaseState CreateAttackState(BaseEnemy enemy) => new DroneSpreadShot(enemy);
     }
 }

@@ -47,7 +47,7 @@ public class PlayerHpManager : MonoBehaviour
         // Cancel out if already dead or protected
         if (isInvulnerable || IsDead) return;
 
-        GlobalReference.Instance.player.Cam.DOShakePosition(0.3f, 0.5f);
+        GlobalReference.Instance.player.Cam.DOShakePosition(0.6f, 1f);
         
         CurrentHp -= damage;
         RefreshHp();
@@ -67,10 +67,14 @@ public class PlayerHpManager : MonoBehaviour
         RefreshHp();
     }
 
+    /// <summary>Raised when the player dies. The locomotion state machine subscribes
+    /// to switch into its DiedState, so HP no longer reaches into the state machine.</summary>
+    public event Action OnDied;
+
     public void Died()
     {
         IsDead = true;
-        GlobalReference.Instance.player.ChangeState(GlobalReference.Instance.player.DiedState);
+        OnDied?.Invoke();
     }
 
     private void RefreshHp()

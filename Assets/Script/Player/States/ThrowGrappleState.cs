@@ -24,8 +24,8 @@ public class ThrowGrappleState : PlayerState
         
         manager.PBM.enabled = true;
 
-        grappleCastHit = manager.GrapplePrediction();
-        manager.predictionPoint.gameObject.SetActive(false);
+        grappleCastHit = manager.Targeting.Predict();
+        manager.Targeting.HidePredictionPoint();
 
         manager.GrappleLr.enabled = true;
         manager.GrappleLr.positionCount = segmentCount;
@@ -37,7 +37,7 @@ public class ThrowGrappleState : PlayerState
         }
         else
         {
-            manager.RUD.GrapplePoint = manager.Guntip.position + manager.Cam.transform.forward * manager.GrappleMaxDistance;
+            manager.RUD.GrapplePoint = manager.Guntip.position + manager.Cam.transform.forward * manager.Targeting.GrappleMaxDistance;
         }
     }
 
@@ -61,7 +61,7 @@ public class ThrowGrappleState : PlayerState
                 return;
             }
 
-            LayerMask combinedLayer = manager.Swingable | manager.Pullable | manager.HeavyPull;
+            LayerMask combinedLayer = manager.Targeting.Swingable | manager.Targeting.Pullable | manager.Targeting.HeavyPull;
             if ((1 << manager.RUD.GrappledObject.layer & combinedLayer) != 0) { manager.ChangeState(manager.SwingState); }
             else manager.ChangeState(manager.pullRopeBackState);
         }

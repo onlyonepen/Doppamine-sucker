@@ -23,11 +23,11 @@ public class SlideState : PlayerState
     {
         base.OnStateUpdate();
 
-        manager.GrapplePrediction();
+        manager.Targeting.Predict();
 
         SlideLogic();
 
-        if (Input.GetMouseButtonDown(1)) manager.ChangeState(manager.ThrowGrappleState);
+        if (manager.Input.GrapplePressed) manager.ChangeState(manager.ThrowGrappleState);
     }
 
     public override void OnStatePhysicsUpdate()
@@ -54,7 +54,7 @@ public class SlideState : PlayerState
         manager.rb.AddForce(speed * SlideDir);
 
 
-        float strafeOffset = Input.GetKey(KeyCode.D) ? 10 : (Input.GetKey(KeyCode.A) ? -10 : 0);
+        float strafeOffset = manager.Input.StrafeRightHeld ? 10 : (manager.Input.StrafeLeftHeld ? -10 : 0);
 
         float targetYRotation = manager.transform.eulerAngles.y + strafeOffset;
         Quaternion targetRotation = Quaternion.Euler(0, targetYRotation, 0);
@@ -70,9 +70,9 @@ public class SlideState : PlayerState
         manager.rb.AddForce(-manager.rb.linearVelocity * (1 - manager.SlideFriction));
 
 
-        if (Input.GetKeyUp(KeyCode.LeftControl) || manager.rb.linearVelocity.magnitude <= manager.SlideSpeedTreshold || Input.GetKeyDown(KeyCode.Space))
+        if (manager.Input.CrouchReleased || manager.rb.linearVelocity.magnitude <= manager.SlideSpeedTreshold || manager.Input.JumpPressed)
         {
-            if (Input.GetKeyDown(KeyCode.Space)) manager.PBM.Jump();
+            if (manager.Input.JumpPressed) manager.PBM.Jump();
             manager.ChangeState(manager.BaseState);
         }
     }

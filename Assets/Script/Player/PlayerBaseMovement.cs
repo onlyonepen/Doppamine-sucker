@@ -3,6 +3,7 @@ using UnityEngine;
 public class PlayerBaseMovement : MonoBehaviour
 {
     [HideInInspector] public Rigidbody rb;
+    private IPlayerInput playerInput;
 
     #region seralize
     [Header("seralize")]
@@ -44,7 +45,6 @@ public class PlayerBaseMovement : MonoBehaviour
 
     public bool enableJump = true;
     public bool hasVariableJumpHeight = true;
-    public KeyCode jumpKey = KeyCode.Space;
     public float jumpPower = 5f;
     public float coyoteTime = 0.2f;
     public float jumpBuffferingTime = 0.2f;
@@ -90,7 +90,6 @@ public class PlayerBaseMovement : MonoBehaviour
     [Header("Crouch/Slide")]
     public bool enableCrouch = true;
     public bool holdToCrouch = true;
-    public KeyCode crouchKey = KeyCode.LeftControl;
     public float crouchHeight = .75f;
     public float speedReduction = .5f;
 
@@ -129,6 +128,7 @@ public class PlayerBaseMovement : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
+        playerInput = GetComponentInParent<PlayerManager>().Input;
 
         playerCamera.fieldOfView = fov;
         originalScale = transform.localScale;
@@ -158,16 +158,16 @@ public class PlayerBaseMovement : MonoBehaviour
         // Control camera movement
         if (cameraCanMove)
         {
-            yaw = transform.localEulerAngles.y + Input.GetAxis("Mouse X") * mouseSensitivity;
+            yaw = transform.localEulerAngles.y + playerInput.Look.x * mouseSensitivity;
 
             if (!invertCamera)
             {
-                pitch -= mouseSensitivity * Input.GetAxis("Mouse Y");
+                pitch -= mouseSensitivity * playerInput.Look.y;
             }
             else
             {
                 // Inverted Y
-                pitch += mouseSensitivity * Input.GetAxis("Mouse Y");
+                pitch += mouseSensitivity * playerInput.Look.y;
             }
 
             // Clamp pitch between lookAngle
@@ -189,7 +189,7 @@ public class PlayerBaseMovement : MonoBehaviour
                 isExtraGravOn = false;
             }
 
-            if (Input.GetKeyDown(jumpKey))
+            if (playerInput.JumpPressed)
             {
                 bufferingTimer = jumpBuffferingTime;
             }
@@ -207,17 +207,17 @@ public class PlayerBaseMovement : MonoBehaviour
 
             if (enableCrouch)
             {
-                if (Input.GetKeyDown(crouchKey) && !holdToCrouch)
+                if (playerInput.CrouchPressed && !holdToCrouch)
                 {
                     Crouch();
                 }
 
-                if (Input.GetKeyDown(crouchKey) && holdToCrouch)
+                if (playerInput.CrouchPressed && holdToCrouch)
                 {
                     isCrouched = false;
                     Crouch();
                 }
-                else if (Input.GetKeyUp(crouchKey) && holdToCrouch)
+                else if (playerInput.CrouchReleased && holdToCrouch)
                 {
                     isCrouched = true;
                     Crouch();
@@ -229,7 +229,7 @@ public class PlayerBaseMovement : MonoBehaviour
         }
 
         #region 0 Velocity snap
-        Vector3 inputVelocity = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+        Vector3 inputVelocity = new Vector3(playerInput.Move.x, 0, playerInput.Move.y);
         Vector3 nonVerticalVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
         if (inputVelocity.magnitude == 0 && nonVerticalVelocity.magnitude <= 1f)
         {
@@ -241,6 +241,8 @@ public class PlayerBaseMovement : MonoBehaviour
 
         if (enableHeadBob)
         {
+            Vector3 horizontalVel = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
+            isWalking = isGrounded && horizontalVel.magnitude > 0.1f;
             HeadBob();
         }
     }
@@ -253,17 +255,17 @@ public class PlayerBaseMovement : MonoBehaviour
 
         if (playerCanMove)
         {
-            Vector3 input = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
+            Vector3 moveInput = new Vector3(playerInput.MoveRaw.x, 0, playerInput.MoveRaw.y);
             if (isGrounded)
             {
-                if (input.magnitude > 1) input.Normalize();
+                if (moveInput.magnitude > 1) moveInput.Normalize();
 
-                Vector3 targetVelocity = transform.TransformDirection(input) * walkSpeed;
+                Vector3 targetVelocity = transform.TransformDirection(moveInput) * walkSpeed;
 
                 Vector3 currentVelocity = rb.linearVelocity;
                 currentVelocity.y = 0;
 
-                float driveForce = input.magnitude > 0 ? acceleration : deceleration;
+                float driveForce = moveInput.magnitude > 0 ? acceleration : deceleration;
 
                 Vector3 newVelocity = Vector3.MoveTowards(currentVelocity, targetVelocity, driveForce * Time.fixedDeltaTime);
 
@@ -294,7 +296,7 @@ public class PlayerBaseMovement : MonoBehaviour
 
         #region ExtraGrav
 
-        bool variableJumpHeightActive = hasVariableJumpHeight && !Input.GetKey(jumpKey);
+        bool variableJumpHeightActive = hasVariableJumpHeight && !playerInput.JumpHeld;
         isExtraGravOn = hasFallingExtraGrav && (rb.linearVelocity.y < 0 || variableJumpHeightActive);
         if (isExtraGravOn)
         {

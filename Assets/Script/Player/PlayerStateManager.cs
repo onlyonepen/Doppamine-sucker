@@ -7,28 +7,24 @@ using VInspector;
 public class PlayerStateManager : MonoBehaviour
 {
     [ReadOnly] public string curreentState;
-    [Header("Energy")]
-    public bool useEnergy = true;
-    public float MaxEnergy = 100f;
-    public float InitialThrowUsage = 20;
-    public float GrappleLeapUsage = 40;
-    public float GrappleDashUsage = 10;
-    
-    public float EnergyRegeneration = 5f;
-    public float GroundedEnergyRegeneration = 50f;
 
-    public float currentEnergy;
-    
     [Header("BasicReference")]
-    public Rigidbody rb;
-    public PlayerBaseMovement PBM;
-    public Camera Cam;
+    public PlayerManager Manager;
+    /// <summary>Shortcut to the active input source so states can read manager.Input.X</summary>
+    public IPlayerInput Input => Manager.Input;
+    // These are populated from the hub in Awake (single source of truth) — no need to wire them here.
+    [HideInInspector] public Rigidbody rb;
+    [HideInInspector] public PlayerBaseMovement PBM;
+    [HideInInspector] public Camera Cam;
+    [HideInInspector] public PlayerCameraController camController;
+    [HideInInspector] public PlayerHpManager playerHp;
+    [HideInInspector] public PlayerEnergy Energy;
+    [HideInInspector] public GrappleTargeting Targeting;
+    [HideInInspector] public FootstepManager footstepManager;
+    // State-machine-owned config (stays wired here).
     public PlayerRUD RUD = new PlayerRUD();
     public LayerMask TerrainLayer;
     public Transform feetTrans;
-    public PlayerCameraController camController;
-    public PlayerHpManager playerHp;
-    public FootstepManager footstepManager;
     [Header("CameraFov")]
     public float minFov = 80f;
     public float maxFov = 100f;
@@ -58,12 +54,7 @@ public class PlayerStateManager : MonoBehaviour
     public float GrappleEnemyOffset = 1.5f;
     internal Vector3 initialHandPos;
     internal Quaternion initialHandRot;
-    public Transform predictionPoint;
-    public float GrappleMaxDistance;
     public float GrappleTravelTime;
-    public LayerMask Swingable;
-    public LayerMask Pullable;
-    public LayerMask HeavyPull;
     public LineRenderer GrappleLr;
     [Header("Swinging")]
     public float JointSpring = 4.5f;
@@ -103,15 +94,43 @@ public class PlayerStateManager : MonoBehaviour
 
     #endregion
 
+    private void Awake()
+    {
+        // Pull every sibling from the hub — the single place references are wired.
+        if (!Manager) Manager = GetComponentInParent<PlayerManager>();
+        rb              = Manager.rb;
+        PBM             = Manager.Movement;
+        Cam             = Manager.Cam;
+        camController    = Manager.CameraController;
+        playerHp        = Manager.Health;
+        Energy          = Manager.Energy;
+        Targeting       = Manager.Targeting;
+        footstepManager = Manager.Footsteps;
+    }
+
     private void Start()
     {
-        currentEnergy = MaxEnergy;
         currentFov = minFov;
         initialHandPos = GrappleArm.localPosition;
         initialHandRot = GrappleArm.localRotation;
-        
+
         CurrentState = BaseState;
         CurrentState.OnStateEnter(this);
+    }
+
+    private void OnEnable()
+    {
+        if (playerHp != null) playerHp.OnDied += HandleDied;
+    }
+
+    private void OnDisable()
+    {
+        if (playerHp != null) playerHp.OnDied -= HandleDied;
+    }
+
+    private void HandleDied()
+    {
+        ChangeState(DiedState);
     }
 
     void Update()
@@ -137,156 +156,6 @@ public class PlayerStateManager : MonoBehaviour
         CurrentState.OnStateTriggerEnter(other);
     }
     
-    [Header("AimAssist")]
-    public float minAimAssistRadius = 0.8f; 
-    public float maxAimAssistRadius = 5.0f; 
-
-    public RaycastHit GrapplePrediction()
-    {
-        LayerMask assistPriority = HeavyPull | Pullable; // Enemies / Pullables
-        LayerMask allGrappleMasks = Swingable | assistPriority;
-        LayerMask obstacleMask = GlobalReference.Instance.TerrainLayer; 
-
-        // --- 1. DIRECT RAYCAST ---
-        RaycastHit directHitEnemy = new RaycastHit();
-        bool foundDirectEnemy = false;
-    
-        RaycastHit directHitSwing = new RaycastHit();
-        bool foundDirectSwing = false;
-
-        // Check perfectly down the center first
-        if (Physics.Raycast(Cam.transform.position, Cam.transform.forward, out RaycastHit tempDirect, GrappleMaxDistance, allGrappleMasks | obstacleMask))
-        {
-            int hitLayer = 1 << tempDirect.collider.gameObject.layer;
-
-            // SWAPPED: Check if the direct hit is terrain/swingable FIRST
-            if ((hitLayer & Swingable) != 0) 
-            {
-                directHitSwing = tempDirect;
-                foundDirectSwing = true;
-            }
-            // Then check if the direct hit is an enemy
-            else if ((hitLayer & assistPriority) != 0)
-            {
-                directHitEnemy = tempDirect;
-                foundDirectEnemy = true;
-            }
-        }
-
-        // --- 2. AIM ASSIST (SPHERECAST) ---
-        RaycastHit[] hits = Physics.SphereCastAll(
-            Cam.transform.position, 
-            maxAimAssistRadius, 
-            Cam.transform.forward, 
-            GrappleMaxDistance, 
-            allGrappleMasks
-        );
-
-        RaycastHit bestAssistEnemyHit = new RaycastHit();
-        float bestEnemyScore = -1f;
-        bool foundAssistEnemy = false;
-
-        RaycastHit bestAssistSwingHit = new RaycastHit();
-        float bestSwingScore = -1f;
-        bool foundAssistSwing = false;
-
-        foreach (RaycastHit hit in hits)
-        {
-            // Unity Quirk: If the SphereCast starts inside a collider, hit.point returns Vector3.zero.
-            // This line prevents mathematical errors when calculating the localHitPoint.
-            if (hit.point == Vector3.zero) continue;
-
-            Vector3 localHitPoint = hit.point - Cam.transform.position;
-            float distanceAlongRay = Vector3.Dot(localHitPoint, Cam.transform.forward);
-
-            if (distanceAlongRay < 0) continue; 
-
-            // Dynamic cone calculation
-            float currentAllowedRadius = Mathf.Lerp(minAimAssistRadius, maxAimAssistRadius, distanceAlongRay / GrappleMaxDistance);
-            Vector3 pointOnCenterLine = Cam.transform.position + (Cam.transform.forward * distanceAlongRay);
-            float distanceFromCenter = Vector3.Distance(pointOnCenterLine, hit.point);
-
-            if (distanceFromCenter > currentAllowedRadius)
-                continue;
-
-            // FIXED: Check for blocking obstacles safely!
-            // Output the hit data, and verify we aren't just hitting the object we want to grapple.
-            if (Physics.Linecast(Cam.transform.position, hit.point, out RaycastHit blockHit, obstacleMask))
-            {
-                if (blockHit.collider != hit.collider)
-                {
-                    continue; // It's blocked by a different obstacle
-                }
-            }
-
-            Vector3 directionToHit = localHitPoint.normalized;
-            float alignmentScore = Vector3.Dot(Cam.transform.forward, directionToHit);
-
-            bool isEnemy = ((1 << hit.collider.gameObject.layer) & assistPriority) != 0;
-
-            // Separate highest scoring enemy and highest scoring terrain
-            if (isEnemy)
-            {
-                if (!foundAssistEnemy || alignmentScore > bestEnemyScore)
-                {
-                    bestAssistEnemyHit = hit;
-                    bestEnemyScore = alignmentScore;
-                    foundAssistEnemy = true;
-                }
-            }
-            else 
-            {
-                if (!foundAssistSwing || alignmentScore > bestSwingScore)
-                {
-                    bestAssistSwingHit = hit;
-                    bestSwingScore = alignmentScore;
-                    foundAssistSwing = true;
-                }
-            }
-        }
-
-        // --- 3. PRIORITY RESOLUTION ---
-        RaycastHit finalHit = new RaycastHit();
-        bool hasValidHit = false;
-
-        // SWAPPED: 1. Terrain in Direct Raycast (Intentional Traversal)
-        if (foundDirectSwing)
-        {
-            finalHit = directHitSwing;
-            hasValidHit = true;
-        }
-        // SWAPPED: 2. Enemy in Direct Raycast (Intentional Combat)
-        else if (foundDirectEnemy)
-        {
-            finalHit = directHitEnemy;
-            hasValidHit = true;
-        }
-        // 3. Enemy in Aim Assist (Forgiving Combat)
-        else if (foundAssistEnemy)
-        {
-            finalHit = bestAssistEnemyHit;
-            hasValidHit = true;
-        }
-        // 4. Terrain in Aim Assist (Forgiving Traversal)
-        else if (foundAssistSwing)
-        {
-            finalHit = bestAssistSwingHit;
-            hasValidHit = true;
-        }
-
-        // --- 4. VISUAL FEEDBACK ---
-        if (hasValidHit)
-        {
-            predictionPoint.gameObject.SetActive(true);
-            predictionPoint.position = finalHit.point;
-        }
-        else
-        {
-            predictionPoint.gameObject.SetActive(false);
-        }
-
-        return finalHit;
-    }
     public void GuntipPointToGrapple()
     {
         grappleGun.LookAt(RUD.GrapplePoint);
@@ -314,30 +183,10 @@ public class PlayerStateManager : MonoBehaviour
         }
     }
 
-    public bool UseEnergy(float Usage)
-    {
-        return true;
-        
-        if (currentEnergy - Usage >= 0)
-        {
-            currentEnergy -= Usage;
-            return true;
-        }
-        else return false;
-    }
-
     private void EnergyRegen()
     {
-        float Regen;
-        if (PBM.isGrounded || CurrentState == WallRunState) Regen = GroundedEnergyRegeneration;
-        else if (CurrentState == SwingState) Regen = 0;
-        else Regen = EnergyRegeneration;
-
-        if (currentEnergy + Regen * Time.deltaTime <= MaxEnergy)
-        {
-            currentEnergy += Regen * Time.deltaTime;
-        }
-        else currentEnergy = MaxEnergy;
+        float rate = PBM.isGrounded ? Energy.GroundedEnergyRegeneration : CurrentState.EnergyRegenRate;
+        Energy.Regen(rate);
     }
 
 
@@ -369,6 +218,9 @@ public abstract class PlayerState
     public virtual void OnStatePhysicsUpdate() { }
     public virtual void OnStateExit() { }
     public virtual void OnStateTriggerEnter(Collider collider) { }
+
+    /// <summary>Energy regen rate while airborne in this state. Grounded always overrides to GroundedEnergyRegeneration.</summary>
+    public virtual float EnergyRegenRate => manager.Energy.EnergyRegeneration;
 }
 
 public class PlayerRUD

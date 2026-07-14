@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class SwingState : PlayerState
 {
+    public override float EnergyRegenRate => 0f;
+
     private enum GrappleItem
     {
         Terrain,
@@ -26,9 +28,13 @@ public class SwingState : PlayerState
     {
         base.OnStateEnter(gamestateManager);
 
-        if ((1 << manager.RUD.GrappledObject.layer & manager.Swingable) != 0) grapple = GrappleItem.Terrain;
-        else if ((1 << manager.RUD.GrappledObject.layer & manager.Pullable) != 0) grapple = GrappleItem.Light;
-        else if ((1 << manager.RUD.GrappledObject.layer & manager.HeavyPull) != 0) grapple = GrappleItem.Heavy;
+        int hitLayerBit = 1 << manager.RUD.GrappledObject.layer;
+        if ((hitLayerBit & GlobalReference.Instance.EnemyLayer) != 0)
+        {
+            if ((hitLayerBit & manager.Targeting.HeavyPull) != 0) grapple = GrappleItem.Heavy;
+            else grapple = GrappleItem.Light;
+        }
+        else grapple = GrappleItem.Terrain;
         
         manager.PBM.playerCanMove = false;
         SwingDashed = false;
@@ -91,7 +97,7 @@ public class SwingState : PlayerState
         manager.GrappleLr.SetPosition(1, visualTarget);
 
         // Inputs & State Changes
-        if (!Input.GetMouseButton(1))
+        if (!manager.Input.GrappleHeld)
         {
             switch (grapple)
             {
@@ -107,7 +113,7 @@ public class SwingState : PlayerState
             }
         }
         
-        if (Input.GetKeyDown(KeyCode.LeftShift) && manager.UseEnergy(manager.GrappleLeapUsage))
+        if (manager.Input.SprintPressed && manager.Energy.UseEnergy(manager.Energy.GrappleLeapUsage))
         {
             manager.ChangeState(manager.GrappleLeapState);
             if (grapple == GrappleItem.Light)
@@ -119,8 +125,8 @@ public class SwingState : PlayerState
             }
         }
 
-        vertInput = Input.GetAxis("Vertical");
-        horiInput = Input.GetAxis("Horizontal");
+        vertInput = manager.Input.Move.y;
+        horiInput = manager.Input.Move.x;
         vertInput = new Vector2(horiInput, vertInput).normalized.y;
         horiInput = new Vector2(horiInput, vertInput).normalized.x;
 
@@ -175,7 +181,7 @@ public class SwingState : PlayerState
 
     private void SwingDash()
     {
-        if (Input.GetKeyDown(KeyCode.Space) && !SwingDashed && manager.UseEnergy(manager.GrappleDashUsage))
+        if (manager.Input.JumpPressed && !SwingDashed && manager.Energy.UseEnergy(manager.Energy.GrappleDashUsage))
         {
             float dashForce = manager.rb.linearVelocity.magnitude * manager.SwingDashPower * currentDist * 0.001f;
             float initialVelocity = manager.rb.linearVelocity.magnitude;

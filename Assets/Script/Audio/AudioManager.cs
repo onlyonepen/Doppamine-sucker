@@ -113,7 +113,8 @@ public class AudioManager : MonoBehaviour
                 return audioPool[i];
             }
         }
-        return null; 
+        Debug.LogWarning($"AudioManager: Pool exhausted ({poolSize} sources all busy). Increase poolSize if sounds are dropping.");
+        return null;
     }
 
     private IEnumerator DisableAfterPlayback(AudioSource source, float clipLength)

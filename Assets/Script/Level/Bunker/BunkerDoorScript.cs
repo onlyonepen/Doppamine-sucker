@@ -46,7 +46,7 @@ public class SlidingDoors : MonoBehaviour
         {
             leftDoor.DOLocalMove(leftOpenPos, openDuration).SetEase(Ease.InOutSine);
             rightDoor.DOLocalMove(rightOpenPos, openDuration).SetEase(Ease.InOutSine);
-            GlobalReference.Instance.player.camController.transform.DOShakePosition(openDuration,0.5f,50);
+            GlobalReference.Instance.player.CameraController.transform.DOShakePosition(openDuration,0.5f,50);
             doorSound.Play();
         }
     }

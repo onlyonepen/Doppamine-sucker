@@ -29,7 +29,7 @@ public class PlayerBaseState : PlayerState
     {
         base.OnStateUpdate();
 
-        manager.GrapplePrediction();
+        manager.Targeting.Predict();
         
         WallRunCheck();
         MantleCheck();
@@ -38,7 +38,7 @@ public class PlayerBaseState : PlayerState
         if(!manager.PBM.isGrounded) manager.footstepManager.SetFootstepsEnabled(false);
         else  manager.footstepManager.SetFootstepsEnabled(true);
         
-        if (Input.GetMouseButtonDown(1) && manager.UseEnergy(manager.InitialThrowUsage))
+        if (manager.Input.GrapplePressed && manager.Energy.UseEnergy(manager.Energy.InitialThrowUsage))
         {
             manager.grappleGun.gameObject.SetActive(true);
             manager.ChangeState(manager.ThrowGrappleState);
@@ -55,7 +55,7 @@ public class PlayerBaseState : PlayerState
         bool wallRight = wallRightLower && wallRightUpper;
         bool wallLeft = wallLeftLower && wallLeftUpper;
         
-        if ((wallRight || wallLeft) && !manager.PBM.isGrounded && Input.GetKey(KeyCode.W))
+        if ((wallRight || wallLeft) && !manager.PBM.isGrounded && manager.Input.ForwardHeld)
         {
             manager.ChangeState(manager.WallRunState);
         }
@@ -64,7 +64,7 @@ public class PlayerBaseState : PlayerState
     private void MantleCheck()
     {
         if (manager.PBM.isGrounded) return ;
-        if (!Input.GetKey(KeyCode.W)) return;
+        if (!manager.Input.ForwardHeld) return;
 
         float forwardReach = 1.5f;
         Vector3 origin = manager.transform.position;
@@ -94,7 +94,7 @@ public class PlayerBaseState : PlayerState
     private void SlideCheck()
     {
         if (!manager.PBM.isGrounded) return;
-        if (!Input.GetKey(KeyCode.LeftControl)) return;
+        if (!manager.Input.CrouchHeld) return;
 
         Vector3 playerfwd = manager.transform.forward;
 
@@ -112,7 +112,7 @@ public class PlayerBaseState : PlayerState
     {
         // 1. Cleanly grab and normalize inputs so diagonal movement isn't faster
         // (This fixes a small bug where your old vertInput was overriding before horiInput calculated)
-        Vector2 inputDir = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical")).normalized;
+        Vector2 inputDir = manager.Input.Move.normalized;
     
         float vertical = inputDir.y * manager.AirControlFwdForce;
         float horizontal = inputDir.x * manager.AirControlHorizontalForce;

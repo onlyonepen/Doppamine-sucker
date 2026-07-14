@@ -6,12 +6,12 @@ public class EnergyBar : MonoBehaviour
 {
     public float MaxBar = 0.4f;
 
-    private PlayerStateManager player;
+    private PlayerEnergy energy;
     private Image bar;
 
     private void Start()
     {
-        player = GlobalReference.Instance.player;
+        energy = GlobalReference.Instance.player.Energy;
         bar = GetComponent<Image>();
     }
 
@@ -24,7 +24,7 @@ public class EnergyBar : MonoBehaviour
 
     public void UpdateEnergyBar()
     {
-        float barAmount = (player.currentEnergy / player.MaxEnergy) * MaxBar;
+        float barAmount = (energy.currentEnergy / energy.MaxEnergy) * MaxBar;
         //AddTween
         bar.fillAmount = barAmount;
     }

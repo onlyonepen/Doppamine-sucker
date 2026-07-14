@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using JL.Splitting;
 using Script.Enemy.EnemiesStats;
 using Script.Enemy.State;
-using Unity.VisualScripting;
 using UnityEngine;
 using VInspector;
 
@@ -21,6 +21,9 @@ namespace Script.Enemy
         
         //test
         [SerializeField] private Splittable splittable;
+
+        /// <summary>Fired by any enemy the moment it dies. Subscribe to reward the player, update score, etc.</summary>
+        public static event Action OnAnyEnemyDied;
 
         public IEnemyStateFactory stateFactory { get; private set; }
         private EnemyBaseState currentState;
@@ -73,24 +76,26 @@ namespace Script.Enemy
             DeathParticles.transform.parent = null;
             DeathParticles.Play();
             ChangeState(stateFactory.CreateStaggerState(this));
-            GlobalReference.Instance.player.currentEnergy = GlobalReference.Instance.player.MaxEnergy;
-    
-            // 2. Disable the entire GameObject (replaces this.enabled = false;)
-            gameObject.SetActive(false); 
+            OnAnyEnemyDied?.Invoke();
+
+            gameObject.SetActive(false);
         }
 
 
+        // To add a new enemy type: add its EnemyType value to the enum, create a factory class,
+        // then register it here. BaseEnemy itself never needs to change again.
+        private static readonly Dictionary<EnemyType, Func<IEnemyStateFactory>> FactoryRegistry =
+            new Dictionary<EnemyType, Func<IEnemyStateFactory>>
+            {
+                { EnemyType.LightDrone, () => new LightDroneFactory() },
+                { EnemyType.HeavyDrone, () => new HeavyDroneFactory() },
+            };
+
         private IEnemyStateFactory CreateFactory(EnemyType type)
         {
-            switch (type)
-            {
-                case EnemyType.LightDrone:
-                    return new LightDroneFactory();
-                case EnemyType.HeavyDrone:
-                    return new HeavyDroneFactory();
-                default:
-                    throw new NotImplementedException("Not implemented for " + type);
-            }
+            if (FactoryRegistry.TryGetValue(type, out Func<IEnemyStateFactory> create))
+                return create();
+            throw new NotImplementedException("No factory registered for enemy type: " + type);
         }
 
         internal float staggerTime;

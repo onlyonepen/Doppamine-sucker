@@ -16,7 +16,7 @@ namespace Script.Player.States
         public override void OnStateUpdate()
         {
             base.OnStateUpdate();
-            if (Input.GetKeyDown(KeyCode.R))
+            if (manager.Input.RespawnPressed)
             {
                 Time.timeScale = 1f;
                 SceneManager.LoadScene(SceneManager.GetActiveScene().name);

@@ -27,21 +27,61 @@ public class PlayerAttacking : MonoBehaviour
     [SerializeField] private float attack1HitDelay = 0.2f; 
     [Tooltip("Time in seconds before the Attack 2 hitbox is active")]
     [SerializeField] private float attack2HitDelay = 0.25f;
+    [Tooltip("Time scale held while a melee hit connects (impact slow-mo)")]
+    [SerializeField] private float attackSlowMoScale = 0.5f;
 
     private bool nextAttackQueued = false;
 
+    private PlayerManager manager;
+    private int parriableLayer;
+    private LayerMask splitAndDamagable;
+
+    /// <summary>Active weapon mode. Null = the built-in melee combo in this class.
+    /// Assign via EquipMode() when you add real weapon modes later; the primary-attack
+    /// input then routes to the mode instead of the built-in melee.</summary>
+    private IWeaponMode currentMode;
+
+    private void Awake()
+    {
+        manager = GetComponentInParent<PlayerManager>();
+    }
+
+    private void Start()
+    {
+        parriableLayer    = LayerMask.NameToLayer("Parriable");
+        splitAndDamagable = LayerMask.GetMask("SplittableObject") | GlobalReference.Instance.EnemyLayer;
+    }
+
+    /// <summary>Swap the active weapon mode. Pass null to fall back to built-in melee.</summary>
+    public void EquipMode(IWeaponMode mode)
+    {
+        currentMode?.OnUnequip();
+        currentMode = mode;
+        currentMode?.OnEquip(this);
+    }
+
     private void Update()
     {
-        if (Input.GetMouseButtonDown(0))
+        currentMode?.Tick();
+
+        if (manager.Input.AttackPressed)
         {
-            if (currentAttackState == AttackState.Idle)
-            {
-                StartCombo();
-            }
-            else if (currentAttackState == AttackState.Attack1)
-            {
-                nextAttackQueued = true;
-            }
+            if (currentMode != null) currentMode.OnPrimaryPressed();
+            else HandlePrimaryAttack();
+        }
+    }
+
+    // ---- Built-in melee weapon (default until an IWeaponMode is equipped) ----
+
+    private void HandlePrimaryAttack()
+    {
+        if (currentAttackState == AttackState.Idle)
+        {
+            StartCombo();
+        }
+        else if (currentAttackState == AttackState.Attack1)
+        {
+            nextAttackQueued = true;
         }
     }
 
@@ -62,7 +102,7 @@ public class PlayerAttacking : MonoBehaviour
     {
         if (nextAttackQueued)
         {
-            Time.timeScale =  1f;
+            HitStopUtil.Instance.ResetBaseTimeScale();
             currentAttackState = AttackState.Attack2;
             nextAttackQueued = false;
 
@@ -75,7 +115,7 @@ public class PlayerAttacking : MonoBehaviour
         }
         else
         {
-            Time.timeScale = 1;
+            HitStopUtil.Instance.ResetBaseTimeScale();
             BackToIdle();
         }
     }
@@ -120,7 +160,7 @@ public class PlayerAttacking : MonoBehaviour
                     // The moment an enemy gets pulled into the hitbox, drop time!
                     if (!slowMoTriggered)
                     {
-                        Time.timeScale = 0.5f; 
+                        HitStopUtil.Instance.SetBaseTimeScale(attackSlowMoScale);
                         slowMoTriggered = true;
                     }
                     
@@ -151,7 +191,7 @@ public class PlayerAttacking : MonoBehaviour
                 }
                 
                 // If we somehow hit someone without triggering slow-mo yet, trigger it now for the impact!
-                if (!slowMoTriggered) Time.timeScale = 0.5f;
+                if (!slowMoTriggered) HitStopUtil.Instance.SetBaseTimeScale(attackSlowMoScale);
             }
         }
 
@@ -159,7 +199,7 @@ public class PlayerAttacking : MonoBehaviour
         ExecuteHitboxLogic(activePlane, lockedTargets);
         
         yield return new WaitForSecondsRealtime(0.05f); // Use realtime so the pause is consistent
-        Time.timeScale = 1f;
+        HitStopUtil.Instance.ResetBaseTimeScale();
     }
 
     // --- UPDATED: Now receives the locked targets ---
@@ -168,12 +208,9 @@ public class PlayerAttacking : MonoBehaviour
         // If the enemy dodged before the radar even caught them, snap time back to normal
         if (targetsToProcess == null || targetsToProcess.Count == 0)
         {
-            Time.timeScale = 1f;
+            HitStopUtil.Instance.ResetBaseTimeScale();
             return;
         }
-
-        int parriableLayer = LayerMask.NameToLayer("Parriable");
-        LayerMask splitAndDamagable = LayerMask.GetMask("SplittableObject") | GlobalReference.Instance.EnemyLayer;
 
         // Keep this internal HashSet to prevent multiple child colliders on the SAME enemy from triggering multiple cuts
         HashSet<IDamagable> hitTargets = new HashSet<IDamagable>();

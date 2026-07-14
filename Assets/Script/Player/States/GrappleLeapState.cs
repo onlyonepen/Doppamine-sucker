@@ -89,8 +89,8 @@ public class GrappleLeapState : PlayerState
 
     private void AirControl()
     {
-        float vertical = Input.GetAxis("Vertical") * manager.AirControlFwdForce;
-        float horizontal = Input.GetAxis("Horizontal") * manager.AirControlHorizontalForce;
+        float vertical = manager.Input.Move.y * manager.AirControlFwdForce;
+        float horizontal = manager.Input.Move.x * manager.AirControlHorizontalForce;
 
         Vector3 TotalForceDir = (manager.Cam.transform.forward * vertical) + (manager.Cam.transform.right * horizontal);
         manager.rb.AddForce(TotalForceDir * Time.deltaTime, ForceMode.Force);

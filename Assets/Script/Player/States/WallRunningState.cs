@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class WallRunningState : PlayerState
 {
+    public override float EnergyRegenRate => manager.Energy.GroundedEnergyRegeneration;
+
     RaycastHit leftWallHit;
     RaycastHit rightWallHit;
 
@@ -20,7 +22,7 @@ public class WallRunningState : PlayerState
         base.OnStateEnter(gamestateManager);
         manager.GuntipDefault();
         manager.rb.useGravity = false;
-        manager.predictionPoint.gameObject.SetActive(false);
+        manager.Targeting.HidePredictionPoint();
     }
 
     public override void OnStateUpdate()
@@ -34,11 +36,11 @@ public class WallRunningState : PlayerState
 
         WallRunMovement();
         
-        manager.GrapplePrediction();
+        manager.Targeting.Predict();
         
-        if (Input.GetMouseButtonDown(1)) manager.ChangeState(manager.ThrowGrappleState);
+        if (manager.Input.GrapplePressed) manager.ChangeState(manager.ThrowGrappleState);
 
-        if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyUp(KeyCode.W)) manager.ChangeState(manager.BaseState);
+        if (manager.Input.JumpPressed || manager.Input.ForwardReleased) manager.ChangeState(manager.BaseState);
     }
 
     public override void OnStateExit()
@@ -65,8 +67,8 @@ public class WallRunningState : PlayerState
     {
         orient = new Vector3(manager.Cam.transform.forward.x, 0 , manager.Cam.transform.forward.z).normalized;
 
-        upwardsRunning = Input.GetKey(KeyCode.LeftShift);
-        downwardsRunning = Input.GetKey(KeyCode.LeftControl);
+        upwardsRunning = manager.Input.SprintHeld;
+        downwardsRunning = manager.Input.CrouchHeld;
 
         Rigidbody rb = manager.rb;
 

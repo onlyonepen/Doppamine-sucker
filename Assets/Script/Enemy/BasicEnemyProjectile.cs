@@ -35,7 +35,7 @@ public class BasicEnemyProjectile : MonoBehaviour , IParriable
                 {
                         bool hitPlayer = (1 << collision.gameObject.layer & GlobalReference.Instance.playerLayer) != 0;
                         bool hitTerrain = (1 << collision.gameObject.layer & GlobalReference.Instance.TerrainLayer) != 0;
-                        if(hitPlayer) GlobalReference.Instance.player.playerHp.takedamage();
+                        if(hitPlayer) GlobalReference.Instance.player.Health.takedamage();
                         if(hitPlayer || hitTerrain) Destroy(gameObject);       
                 }
         }
